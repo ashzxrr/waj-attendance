@@ -42,10 +42,34 @@
     </div>
 
     <script>
+        // ─── Token guard: redirect to login if no token ────────────────────
         const token = localStorage.getItem('token');
         if (!token) {
             window.location.href = '/login';
         }
+
+        // ─── Check face registration via API ───────────────────────────────
+        // Since page routes are public (no server-side auth), we verify the
+        // employee's face registration status client-side via the /api/me endpoint.
+        (async function checkFaceRegistration() {
+            try {
+                const res = await fetch('/api/me', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Accept': 'application/json',
+                    },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!data.face_registered) {
+                        window.location.href = '/face-registration';
+                        return;
+                    }
+                }
+            } catch (e) {
+                // Silently fail — page still renders with localStorage data
+            }
+        })();
 
         document.getElementById('employeeName').textContent = 'Selamat datang, ' + (localStorage.getItem('employee_name') || '');
         document.getElementById('displayName').textContent = localStorage.getItem('employee_name') || 'Karyawan';

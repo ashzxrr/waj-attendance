@@ -151,6 +151,15 @@
     </div>
 
     <script>
+        // ─── Token guard: redirect to login if no token ────────────────────
+        // Page routes are publicly routable (no server-side auth middleware).
+        // Auth is enforced client-side — if no Bearer token in localStorage,
+        // redirect immediately before any other logic (models, camera, etc.)
+        const _token = localStorage.getItem('token');
+        if (!_token) {
+            window.location.href = '/login';
+        }
+
         // ─── State ──────────────────────────────────────────────────────────
         const captures = []; // Array of { descriptor: number[], photo: string (base64) }
         const MAX_CAPTURES = 3;
@@ -316,7 +325,7 @@
                 const finalPhoto = captures[captures.length - 1].photo;
 
                 const token = localStorage.getItem('token');
-                const response = await fetch('/face-registration', {
+                const response = await fetch('/api/face-registration', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
