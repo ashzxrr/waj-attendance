@@ -77,6 +77,15 @@
                     </div>
                 </div>
 
+                <!-- Face Mismatch Persistent Alert -->
+                <div id="faceMismatchAlert" class="hidden bg-red-500/15 border-2 border-red-500/40 rounded-xl p-4 text-center">
+                    <svg class="w-10 h-10 text-red-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    <p class="text-red-300 text-sm font-medium">Wajah tidak dikenali</p>
+                    <p class="text-red-400/80 text-xs mt-1">Pastikan wajah Anda terlihat jelas di kamera, pencahayaan cukup, lalu coba lagi.</p>
+                </div>
+
                 <!-- Error Message -->
                 <div id="errorMessage" class="hidden bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl p-3 text-center">
                 </div>
@@ -161,6 +170,7 @@
         const cameraError = document.getElementById('cameraError');
         const geoError = document.getElementById('geoError');
         const errorMsg = document.getElementById('errorMessage');
+        const faceMismatchAlert = document.getElementById('faceMismatchAlert');
         const captureBtn = document.getElementById('captureBtn');
         const typeLabel = document.getElementById('typeLabel');
         const infoBar = document.getElementById('infoBar');
@@ -262,6 +272,7 @@
             captureBtn.disabled = true;
             captureBtn.textContent = 'Memproses...';
             hideError();
+            faceMismatchAlert.classList.add('hidden');
 
             try {
                 // Detect face + descriptor on current video frame
@@ -313,8 +324,20 @@
                 const data = await response.json();
 
                 if (!response.ok) {
+                    // face_mismatch = hard reject, show persistent alert
+                    if (data.error === 'face_mismatch') {
+                        faceMismatchAlert.classList.remove('hidden');
+                        // Keep camera running, just reset button for retry
+                        isProcessing = false;
+                        captureBtn.disabled = false;
+                        captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
+                        return;
+                    }
                     throw new Error(data.message || 'Absen gagal');
                 }
+
+                // Hide any previous face mismatch alert on success
+                faceMismatchAlert.classList.add('hidden');
 
                 // ─── Show result ───────────────────────────────────────────
                 showResult(data);

@@ -7,6 +7,7 @@ use App\Models\EmployeeFaceProfile;
 use App\Models\Office;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AttendanceApiController extends Controller
@@ -130,10 +131,41 @@ class AttendanceApiController extends Controller
 
             $type = $lastLog && $lastLog->type === 'IN' ? 'OUT' : 'IN';
 
+            // ─── Face verification (HARD REJECT if mismatch) ───────────────
+            // face-api.js euclidean distance: lower = better match.
+            // Threshold 0.6 is a commonly used cutoff for face-api.js.
+            //
+            // Face mismatch = hard reject (security/fraud prevention).
+            // We reject BEFORE geofence calculation to avoid wasting compute
+            // and to keep attendance data clean — unverified faces should
+            // never pollute the attendance_logs table.
+            // Geofence mismatch = soft flag (legitimate edge cases like GPS
+            // drift, still worth recording for HR review).
+            // ────────────────────────────────────────────────────────────────
+            $faceMatchScore = (float) $request->face_match_score;
+            $faceVerified = $faceMatchScore <= 0.6;
+
+            if (! $faceVerified) {
+                Log::warning('Attendance face mismatch rejected', [
+                    'pin' => $pin,
+                    'timestamp' => now()->toIso8601String(),
+                    'face_match_score' => $faceMatchScore,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'face_mismatch',
+                    'message' => 'Wajah tidak dikenali. Pastikan wajah terlihat jelas dan pencahayaan cukup, lalu coba lagi.',
+                ], 422);
+            }
+
             // ─── Haversine distance calculation ────────────────────────────
             // Formula: a = sin²(Δlat/2) + cos(lat1)·cos(lat2)·sin²(Δlon/2)
             //          c = 2 · atan2(√a, √(1-a))
             //          d = R · c   where R = 6371000m (Earth's mean radius)
+            //
+            // Only computed after face passes — geofence mismatch is a soft
+            // flag, not a hard reject.
             // ────────────────────────────────────────────────────────────────
             $office = Office::first();
             $distanceFromOffice = null;
@@ -155,14 +187,9 @@ class AttendanceApiController extends Controller
                 $isWithinGeofence = $distanceFromOffice <= (int) $office->radius_meter;
             }
 
-            // ─── Face verification ─────────────────────────────────────────
-            // face-api.js euclidean distance: lower = better match.
-            // Threshold 0.6 is a commonly used cutoff for face-api.js.
-            $faceMatchScore = (float) $request->face_match_score;
-            $faceVerified = $faceMatchScore <= 0.6;
-
             // ─── Status ────────────────────────────────────────────────────
-            $status = ($isWithinGeofence && $faceVerified) ? 'verified' : 'flagged';
+            // Face already verified above. Geofence determines if verified or flagged.
+            $status = $isWithinGeofence ? 'verified' : 'flagged';
 
             // ─── Save photo ────────────────────────────────────────────────
             $photoData = $request->photo;
@@ -197,13 +224,7 @@ class AttendanceApiController extends Controller
             $message = "Absen {$typeLabel} berhasil";
 
             if ($status === 'flagged') {
-                if (! $isWithinGeofence) {
-                    $message = 'Di luar area pabrik, absen ditandai untuk review';
-                } elseif (! $faceVerified) {
-                    $message = 'Wajah tidak cocok, absen ditandai untuk review';
-                } else {
-                    $message = "Absen {$typeLabel} ditandai untuk review";
-                }
+                $message = 'Di luar area pabrik, absen ditandai untuk review';
             }
 
             return response()->json([
