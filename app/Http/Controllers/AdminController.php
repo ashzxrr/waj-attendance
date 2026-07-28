@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
@@ -12,6 +13,10 @@ class AdminController extends Controller
      */
     public function showLogin()
     {
+        if (Auth::guard('admin')->check()) {
+            return redirect('/admin/dashboard');
+        }
+
         return view('admin.login');
     }
 
@@ -20,17 +25,17 @@ class AdminController extends Controller
      */
     public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'username' => 'required',
             'password' => 'required',
         ]);
 
-        $username = env('ADMIN_USERNAME', 'admin');
-        $password = env('ADMIN_PASSWORD', 'admin');
-
-        if ($request->username === $username && $request->password === $password) {
-            $request->session()->put('is_admin', true);
-            return redirect('/admin/dashboard');
+        if (Auth::guard('admin')->attempt([
+            'username' => $request->username,
+            'password' => $request->password,
+        ])) {
+            $request->session()->regenerate();
+            return redirect()->intended('/admin/dashboard');
         }
 
         return back()->with('error', 'Username atau password salah');
@@ -41,7 +46,11 @@ class AdminController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->session()->forget('is_admin');
+        Auth::guard('admin')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect('/admin/login');
     }
 

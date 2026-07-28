@@ -46,6 +46,10 @@ return [
             'driver' => 'sanctum',
             'provider' => 'employees',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admin_users',
+        ],
     ],
 
     /*
@@ -74,6 +78,11 @@ return [
         'employees' => [
             'driver' => 'eloquent',
             'model' => App\Models\EmployeeAuth::class,
+        ],
+
+        'admin_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\AdminUser::class,
         ],
 
         // 'users' => [
