@@ -39,6 +39,11 @@
                 <span class="text-emerald-400 text-sm">Wajah terdaftar</span>
             </div>
         </div>
+
+        <!-- Absen Button -->
+        <a href="/absen" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-200 active:scale-[0.98]">
+            Absen Sekarang
+        </a>
     </div>
 
     <script>

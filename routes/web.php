@@ -20,6 +20,10 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
 Route::get('/face-registration', [FaceRegistrationController::class, 'show']);
 
+Route::get('/absen', function () {
+    return view('attendance.checkin');
+});
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 });
