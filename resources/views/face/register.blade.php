@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registrasi Wajah - WAJ Attendance</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.base-url-meta')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
@@ -155,9 +156,10 @@
         // Page routes are publicly routable (no server-side auth middleware).
         // Auth is enforced client-side — if no Bearer token in localStorage,
         // redirect immediately before any other logic (models, camera, etc.)
+        const APP_BASE_URL = document.querySelector('meta[name="app-base-url"]').content.replace(/\/$/, '');
         const _token = localStorage.getItem('token');
         if (!_token) {
-            window.location.href = '/login';
+            window.location.href = `${APP_BASE_URL}/login`;
         }
 
         // ─── State ──────────────────────────────────────────────────────────
@@ -325,7 +327,7 @@
                 const finalPhoto = captures[captures.length - 1].photo;
 
                 const token = localStorage.getItem('token');
-                const response = await fetch('/api/face-registration', {
+                const response = await fetch(`${APP_BASE_URL}/api/face-registration`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -357,7 +359,7 @@
                 `;
 
                 setTimeout(() => {
-                    window.location.href = '/dashboard';
+                    window.location.href = `${APP_BASE_URL}/dashboard`;
                 }, 1500);
             } catch (err) {
                 showError(err.message);

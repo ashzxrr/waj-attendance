@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Masuk - WAJ Attendance</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.base-url-meta')
     <style>
         body {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -93,6 +94,8 @@
     </div>
 
     <script>
+        const APP_BASE_URL = document.querySelector('meta[name="app-base-url"]').content.replace(/\/$/, '');
+
         // Simple device fingerprint generator
         function generateDeviceId() {
             let stored = localStorage.getItem('device_id');
@@ -124,7 +127,7 @@
             submitBtn.textContent = 'Memproses...';
 
             try {
-                const response = await fetch('/api/login', {
+                const response = await fetch(`${APP_BASE_URL}/api/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -151,9 +154,9 @@
 
                 // Redirect based on face registration status
                 if (data.face_registered) {
-                    window.location.href = '/dashboard';
+                    window.location.href = `${APP_BASE_URL}/dashboard`;
                 } else {
-                    window.location.href = '/face-registration';
+                    window.location.href = `${APP_BASE_URL}/face-registration`;
                 }
             } catch (err) {
                 errorDiv.textContent = err.message;

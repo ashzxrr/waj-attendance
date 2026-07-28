@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Absen - WAJ Attendance</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.base-url-meta')
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -120,7 +121,7 @@
                 <p id="resultMessage" class="text-center text-lg font-semibold"></p>
                 <p id="resultDetail" class="text-center text-sm text-slate-400"></p>
                 <div class="flex gap-3 pt-2">
-                    <a href="/dashboard" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-medium rounded-xl transition-colors">
+                    <a id="backToDashboardLink" href="/dashboard" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-medium rounded-xl transition-colors">
                         Kembali ke Dashboard
                     </a>
                     <button onclick="location.reload()" class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium rounded-xl transition-colors">
@@ -138,9 +139,11 @@
 
     <script>
         // ─── Token guard ────────────────────────────────────────────────────
+        const APP_BASE_URL = document.querySelector('meta[name="app-base-url"]').content.replace(/\/$/, '');
+        document.getElementById('backToDashboardLink').href = `${APP_BASE_URL}/dashboard`;
         const token = localStorage.getItem('token');
         if (!token) {
-            window.location.href = '/login';
+            window.location.href = `${APP_BASE_URL}/login`;
         }
 
         // ─── State ──────────────────────────────────────────────────────────
@@ -181,9 +184,9 @@
             };
 
             const [descriptorRes, officeRes, typeRes] = await Promise.all([
-                fetch('/api/attendance/reference-descriptor', { headers }),
-                fetch('/api/attendance/office-location', { headers }),
-                fetch('/api/attendance/next-type', { headers }),
+                fetch(`${APP_BASE_URL}/api/attendance/reference-descriptor`, { headers }),
+                fetch(`${APP_BASE_URL}/api/attendance/office-location`, { headers }),
+                fetch(`${APP_BASE_URL}/api/attendance/next-type`, { headers }),
             ]);
 
             if (!descriptorRes.ok) throw new Error('Data wajah referensi tidak ditemukan');
@@ -291,7 +294,7 @@
                 const photo = canvas.toDataURL('image/jpeg', 0.85);
 
                 // ─── Submit to API ─────────────────────────────────────────
-                const response = await fetch('/api/attendance/store', {
+                const response = await fetch(`${APP_BASE_URL}/api/attendance/store`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

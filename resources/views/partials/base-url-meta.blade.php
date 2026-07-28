@@ -1,0 +1,1 @@
+<meta name="app-base-url" content="{{ url('/') }}">

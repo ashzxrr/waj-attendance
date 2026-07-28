@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - WAJ Attendance</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @include('partials.base-url-meta')
     <style>
         body {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
@@ -41,16 +42,19 @@
         </div>
 
         <!-- Absen Button -->
-        <a href="/absen" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-200 active:scale-[0.98]">
+        <a href="/absen" id="absenLink" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-200 active:scale-[0.98]">
             Absen Sekarang
         </a>
     </div>
 
     <script>
+        const APP_BASE_URL = document.querySelector('meta[name="app-base-url"]').content.replace(/\/$/, '');
+        document.getElementById('absenLink').href = `${APP_BASE_URL}/absen`;
+
         // ─── Token guard: redirect to login if no token ────────────────────
         const token = localStorage.getItem('token');
         if (!token) {
-            window.location.href = '/login';
+            window.location.href = `${APP_BASE_URL}/login`;
         }
 
         // ─── Check face registration via API ───────────────────────────────
@@ -58,7 +62,7 @@
         // employee's face registration status client-side via the /api/me endpoint.
         (async function checkFaceRegistration() {
             try {
-                const res = await fetch('/api/me', {
+                const res = await fetch(`${APP_BASE_URL}/api/me`, {
                     headers: {
                         'Authorization': 'Bearer ' + token,
                         'Accept': 'application/json',
@@ -67,7 +71,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (!data.face_registered) {
-                        window.location.href = '/face-registration';
+                        window.location.href = `${APP_BASE_URL}/face-registration`;
                         return;
                     }
                 }
@@ -82,7 +86,7 @@
 
         document.getElementById('logoutBtn').addEventListener('click', async function() {
             try {
-                await fetch('/api/logout', {
+                await fetch(`${APP_BASE_URL}/api/logout`, {
                     method: 'POST',
                     headers: {
                         'Authorization': 'Bearer ' + token,
@@ -94,7 +98,7 @@
             localStorage.removeItem('token');
             localStorage.removeItem('employee_name');
             localStorage.removeItem('employee_pin');
-            window.location.href = '/login';
+            window.location.href = `${APP_BASE_URL}/login`;
         });
     </script>
 </body>
