@@ -28,8 +28,8 @@
             width: 100%;
         }
         .loading-spinner {
-            border: 3px solid rgba(59, 130, 246, 0.2);
-            border-top-color: #3b82f6;
+            border: 3px solid rgba(16, 185, 129, 0.2);
+            border-top-color: #34d399;
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -42,10 +42,10 @@
     </style>
 </head>
 <body class="flex items-center justify-center p-4 min-h-screen">
-    <div class="w-full max-w-sm">
+    <div class="w-full max-w-sm pb-28">
         <!-- Header -->
         <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/30 mb-3">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30 mb-3">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
@@ -93,7 +93,7 @@
                 <!-- Capture Button -->
                 <button
                     id="captureBtn"
-                    class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Ambil Absen
                 </button>
@@ -133,7 +133,7 @@
                     <a id="backToDashboardLink" href="/dashboard" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-medium rounded-xl transition-colors">
                         Kembali ke Dashboard
                     </a>
-                    <button onclick="location.reload()" class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium rounded-xl transition-colors">
+                    <button onclick="location.reload()" class="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-medium rounded-xl transition-colors">
                         Absen Lagi
                     </button>
                 </div>
@@ -145,6 +145,8 @@
             &copy; {{ date('Y') }} WAJ Attendance System
         </p>
     </div>
+
+    @include('partials.bottom-nav')
 
     <script>
         // ─── Token guard ────────────────────────────────────────────────────

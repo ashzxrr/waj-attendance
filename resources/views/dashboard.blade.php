@@ -14,7 +14,7 @@
     </style>
 </head>
 <body class="p-4">
-    <div class="max-w-lg mx-auto">
+    <div class="max-w-lg mx-auto pb-28">
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <div>
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Absen Button -->
-        <a href="/absen" id="absenLink" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-200 active:scale-[0.98]">
+        <a href="/absen" id="absenLink" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98]">
             Absen Sekarang
         </a>
     </div>
@@ -101,5 +101,7 @@
             window.location.href = `${APP_BASE_URL}/login`;
         });
     </script>
+
+    @include('partials.bottom-nav')
 </body>
 </html>

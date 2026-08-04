@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Route;
 // they are called via fetch() with Authorization: Bearer <token> header.
 // ─────────────────────────────────────────────────────────────────────────────
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn() => redirect('/login'));
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
@@ -27,6 +25,10 @@ Route::get('/absen', function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
+});
+
+Route::get('/profile', function () {
+    return view('profile');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

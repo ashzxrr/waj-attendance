@@ -43,8 +43,8 @@
             transform: scaleX(-1);
         }
         .loading-spinner {
-            border: 3px solid rgba(59, 130, 246, 0.2);
-            border-top-color: #3b82f6;
+            border: 3px solid rgba(16, 185, 129, 0.2);
+            border-top-color: #34d399;
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -82,7 +82,7 @@
             <!-- Camera & Capture UI (hidden until models load) -->
             <div id="cameraUi" class="hidden space-y-4">
                 <!-- Instruction -->
-                <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-sm text-blue-300 text-center">
+                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-sm text-amber-300 text-center">
                     Posisikan wajah Anda di dalam bingkai, lalu tekan tombol untuk mengambil 3 foto dari sedikit posisi berbeda (depan, kiri sedikit, kanan sedikit)
                 </div>
 
@@ -126,7 +126,7 @@
                 <!-- Submit Button (hidden until 3 captures) -->
                 <button
                     id="submitBtn"
-                    class="hidden w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="hidden w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Simpan Registrasi Wajah
                 </button>
