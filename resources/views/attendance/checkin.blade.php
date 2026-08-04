@@ -39,6 +39,15 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        /* Pulsing ring shown around the camera while detection is running */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+            70% { box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .processing-active {
+            animation: pulse-ring 1.2s ease-out infinite;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4 min-h-screen">
@@ -74,6 +83,11 @@
                 <div class="flex justify-center">
                     <div class="video-wrapper">
                         <video id="video" autoplay playsinline></video>
+                        <!-- Processing overlay: shown while detection is running -->
+                        <div id="processingOverlay" class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-slate-950/60 backdrop-blur-sm z-10">
+                            <div class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mb-2"></div>
+                            <p id="processingText" class="text-emerald-300 text-sm font-medium">Mendeteksi wajah...</p>
+                        </div>
                     </div>
                 </div>
 
@@ -160,7 +174,10 @@
         // ─── State ──────────────────────────────────────────────────────────
         let videoStream = null;
         let isProcessing = false;
-        let referenceDescriptor = null;
+        // referenceDescriptors is an array of descriptor arrays (3 by default),
+        // because registration now stores multiple face embeddings to handle the
+        // natural variation in the registered face (angle/lighting).
+        let referenceDescriptors = null;
         let officeLocation = null;
         let nextType = null;
         let currentPosition = null;
@@ -177,6 +194,63 @@
         const typeLabel = document.getElementById('typeLabel');
         const infoBar = document.getElementById('infoBar');
         const resultCard = document.getElementById('resultCard');
+
+        // ─── Processing feedback helpers ────────────────────────────────────
+        const videoWrapper = document.querySelector('.video-wrapper');
+        const processingOverlay = document.getElementById('processingOverlay');
+        const processingText = document.getElementById('processingText');
+        let slowTimer = null;
+
+        function showProcessing() {
+            processingOverlay.classList.remove('hidden');
+            videoWrapper.classList.add('processing-active');
+            processingText.textContent = 'Mendeteksi wajah...';
+        }
+
+        function hideProcessing() {
+            processingOverlay.classList.add('hidden');
+            videoWrapper.classList.remove('processing-active');
+            clearTimeout(slowTimer);
+        }
+
+        // ─── Downscaled detection input ────────────────────────────────────
+        // Face detection runs on a downscaled frame (max 480px wide) to cut
+        // processing time on mobile. Detection accuracy is not meaningfully
+        // affected for a face reasonably framed in view. The ORIGINAL
+        // full-resolution video frame is still used separately for the actual
+        // photo capture/upload, so photo quality stays high.
+        const DETECT_MAX_WIDTH = 480;
+        let detectCanvas = null;
+        let detectCtx = null;
+
+        function getDetectionCanvas() {
+            if (!detectCanvas) {
+                detectCanvas = document.createElement('canvas');
+                detectCtx = detectCanvas.getContext('2d');
+            }
+            const scale = Math.min(1, DETECT_MAX_WIDTH / video.videoWidth);
+            detectCanvas.width = Math.round(video.videoWidth * scale);
+            detectCanvas.height = Math.round(video.videoHeight * scale);
+            // Mirror horizontally to match the displayed (mirrored) video
+            detectCtx.setTransform(-1, 0, 0, 1, detectCanvas.width, 0);
+            detectCtx.drawImage(video, 0, 0, detectCanvas.width, detectCanvas.height);
+            return detectCanvas;
+        }
+
+        // ─── Warm-up detection ─────────────────────────────────────────────
+        // Runs one throwaway detection after models load to warm up the
+        // model/WASM backend, so the first real user-triggered detection
+        // isn't paying a one-time initialization cost on top of normal time.
+        async function warmUpDetection() {
+            try {
+                await faceapi.detectSingleFace(
+                    getDetectionCanvas(),
+                    new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+                );
+            } catch (e) {
+                // Best-effort warm-up — ignore failures
+            }
+        }
 
         // ─── Helper ─────────────────────────────────────────────────────────
         function showError(msg) {
@@ -208,7 +282,20 @@
             const officeData = await officeRes.json();
             const typeData = await typeRes.json();
 
-            referenceDescriptor = descriptorData.descriptor;
+            referenceDescriptors = descriptorData.descriptor;
+
+            // Backward compatibility: old registrations stored a single averaged
+            // descriptor (a flat 128-length array); new registrations store an
+            // array of 3 descriptor arrays. Normalize both to an array of arrays
+            // so the matching loop below always iterates over multiple references.
+            if (
+                Array.isArray(referenceDescriptors)
+                && referenceDescriptors.length > 0
+                && typeof referenceDescriptors[0] === 'number'
+            ) {
+                referenceDescriptors = [referenceDescriptors];
+            }
+
             officeLocation = officeData.office;
             nextType = typeData.next_type;
 
@@ -218,10 +305,14 @@
         }
 
         // ─── 2. Load face-api.js models ────────────────────────────────────
+        // ssdMobilenetv1 is used instead of tinyFaceDetector because it is
+        // significantly more accurate at locating faces — critical for a
+        // security-critical attendance system. It is heavier to load, so the
+        // loading indicator stays visible while the weights download.
         async function loadModels() {
             const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
             await Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
                 faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                 faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
             ]);
@@ -267,36 +358,98 @@
             }
         }
 
-        // ─── 5. Capture & verify face ──────────────────────────────────────
+        // ─── 5. Capture & verify face (multi-frame consensus) ──────────────
+        // Verification policy constants:
+        //   - FRAME_COUNT: number of live frames sampled per attempt.
+        //   - FRAME_INTERVAL_MS: pause between captures so we sample slightly
+        //     different moments (and micro-pose variations) of the same face.
+        //   - MATCH_THRESHOLD: euclidean distance cutoff. Tightened from 0.6 to
+        //     0.45 to reduce the false-accept rate (a different person must NOT
+        //     pass). Tradeoff: genuine users may need good lighting/positioning
+        //     to pass — acceptable for a security-critical attendance system.
+        //   - REQUIRED_PASSES: consensus requirement — at least 2 of 3 frames
+        //     must match. Multi-frame consensus prevents a single lucky/unlucky
+        //     frame from deciding the result at check-in time.
+        const FRAME_COUNT = 3;
+        const FRAME_INTERVAL_MS = 500;
+        const MATCH_THRESHOLD = 0.45;
+        const REQUIRED_PASSES = 2;
+
         async function captureAttendance() {
             if (isProcessing) return;
             isProcessing = true;
             captureBtn.disabled = true;
-            captureBtn.textContent = 'Memproses...';
+            captureBtn.textContent = 'Memverifikasi...';
             hideError();
             faceMismatchAlert.classList.add('hidden');
+            showProcessing();
 
             try {
-                // Detect face + descriptor on current video frame
-                const result = await faceapi
-                    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }))
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
+                // ─── Step A: capture & score FRAME_COUNT consecutive frames ─
+                const frameScores = [];
+                for (let i = 0; i < FRAME_COUNT; i++) {
+                    // Pause between captures so we sample slightly different moments
+                    if (i > 0) await new Promise((r) => setTimeout(r, FRAME_INTERVAL_MS));
 
-                if (!result) {
-                    showError('Wajah tidak terdeteksi, coba lagi');
+                    // ssdMobilenetv1 is more accurate than tinyFaceDetector,
+                    // important for a security-critical attendance system.
+                    // Detection runs on a DOWNSCALED frame for speed; the
+                    // full-resolution frame is still used for the photo upload.
+                    const detectInput = getDetectionCanvas();
+
+                    // Elapsed-time-aware messaging: if this single detection
+                    // attempt takes longer than 2s, reassure the user.
+                    slowTimer = setTimeout(() => {
+                        processingText.textContent = 'Masih memproses, mohon tunggu...';
+                    }, 2000);
+
+                    const result = await faceapi
+                        .detectSingleFace(detectInput, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+
+                    clearTimeout(slowTimer);
+
+                    if (!result) {
+                        hideProcessing();
+                        showError('Wajah tidak terdeteksi, coba lagi');
+                        isProcessing = false;
+                        captureBtn.disabled = false;
+                        captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
+                        return;
+                    }
+
+                    // ─── Score this frame ────────────────────────────────────
+                    // Multiple reference descriptors handle the natural variation
+                    // in the registered face (angle/lighting). Compare this
+                    // frame's descriptor against ALL reference descriptors and
+                    // keep the MINIMUM distance (best match) as the frame score.
+                    let frameDistance = Infinity;
+                    for (const refDescriptor of referenceDescriptors) {
+                        const d = faceapi.euclideanDistance(result.descriptor, refDescriptor);
+                        if (d < frameDistance) frameDistance = d;
+                    }
+                    frameScores.push(frameDistance);
+                }
+
+                // ─── Step B: consensus check ───────────────────────────────
+                // At least REQUIRED_PASSES of the frames must be below threshold.
+                const passingScores = frameScores.filter((d) => d <= MATCH_THRESHOLD);
+                if (passingScores.length < REQUIRED_PASSES) {
+                    hideProcessing();
+                    faceMismatchAlert.classList.remove('hidden');
+                    // Keep camera running, just reset button for retry
                     isProcessing = false;
                     captureBtn.disabled = false;
                     captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
                     return;
                 }
 
-                // ─── Compute euclidean distance ────────────────────────────
-                // face-api.js euclideanDistance returns a float where lower
-                // values = better match. Threshold: <= 0.6 is considered verified.
-                const distance = faceapi.euclideanDistance(result.descriptor, referenceDescriptor);
+                // Use the average of the passing distances as the final score
+                // sent to the backend.
+                const finalScore = passingScores.reduce((sum, d) => sum + d, 0) / passingScores.length;
 
-                // Capture frame as base64 JPEG
+                // Capture frame as base64 JPEG (from the current live video)
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
@@ -305,6 +458,9 @@
                 ctx.scale(-1, 1);
                 ctx.drawImage(video, 0, 0);
                 const photo = canvas.toDataURL('image/jpeg', 0.85);
+
+                // Detection is done — hide the processing indicator before submit.
+                hideProcessing();
 
                 // ─── Submit to API ─────────────────────────────────────────
                 const response = await fetch(`${APP_BASE_URL}/api/attendance/store`, {
@@ -317,7 +473,7 @@
                     body: JSON.stringify({
                         latitude: currentPosition.latitude,
                         longitude: currentPosition.longitude,
-                        face_match_score: distance,
+                        face_match_score: finalScore,
                         photo: photo,
                         device_info: navigator.userAgent,
                     }),
@@ -345,6 +501,7 @@
                 showResult(data);
             } catch (err) {
                 showError(err.message);
+                hideProcessing();
                 isProcessing = false;
                 captureBtn.disabled = false;
                 captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
@@ -413,6 +570,10 @@
                 // Show camera UI
                 loadingState.classList.add('hidden');
                 cameraUi.classList.remove('hidden');
+
+                // Fire-and-forget warm-up detection so the first real
+                // user-triggered detection doesn't pay one-time init cost.
+                warmUpDetection();
             } catch (err) {
                 if (!cameraError.classList.contains('hidden') || !geoError.classList.contains('hidden')) return;
                 loadingState.innerHTML = `

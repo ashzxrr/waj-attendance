@@ -26,9 +26,18 @@ class FaceRegistrationController extends Controller
             $user = $request->user();
             $pin = $user->pin;
 
-            // Decode and validate descriptor (must be array of 128 floats)
-            $descriptor = json_decode($request->descriptor, true);
-            if (! is_array($descriptor) || count($descriptor) !== 128) {
+            // Decode and validate descriptor.
+            // Since registration captures 3 photos from slightly different angles,
+            // face_embedding now stores an array of 3 descriptor arrays (each 128
+            // floats). Keeping all 3 separately (instead of averaging) preserves
+            // the natural variation in the registered face (angle/lighting), which
+            // gives the matching logic more robust reference points at check-in.
+            $descriptors = json_decode($request->descriptor, true);
+            $valid = is_array($descriptors)
+                && count($descriptors) === 3
+                && collect($descriptors)->every(fn ($d) => is_array($d) && count($d) === 128);
+
+            if (! $valid) {
                 return response()->json([
                     'message' => 'Format descriptor wajah tidak valid.',
                 ], 422);
@@ -52,10 +61,11 @@ class FaceRegistrationController extends Controller
             Storage::disk('public')->put($photoPath, $photoData);
 
             // Upsert face profile
+            // face_embedding stores the array of 3 descriptor arrays as JSON.
             EmployeeFaceProfile::updateOrCreate(
                 ['pin' => $pin],
                 [
-                    'face_embedding' => json_encode($descriptor),
+                    'face_embedding' => json_encode($descriptors),
                     'photo_reference_path' => $photoPath,
                     'registered_at' => now(),
                 ]

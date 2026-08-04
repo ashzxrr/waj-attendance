@@ -54,6 +54,15 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        /* Pulsing ring shown around the camera while detection is running */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+            70% { box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .processing-active {
+            animation: pulse-ring 1.2s ease-out infinite;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center p-4 min-h-screen">
@@ -94,6 +103,11 @@
                         <svg id="overlay" viewBox="0 0 360 270" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <ellipse cx="180" cy="135" rx="90" ry="105" stroke="rgba(59,130,246,0.4)" stroke-width="2" stroke-dasharray="6 4"/>
                         </svg>
+                        <!-- Processing overlay: shown while detection is running -->
+                        <div id="processingOverlay" class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-slate-950/60 backdrop-blur-sm z-10">
+                            <div class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mb-2"></div>
+                            <p id="processingText" class="text-emerald-300 text-sm font-medium">Mendeteksi wajah...</p>
+                        </div>
                     </div>
                 </div>
 
@@ -180,6 +194,63 @@
         const thumbnails = document.getElementById('thumbnails');
         const dots = [document.getElementById('dot1'), document.getElementById('dot2'), document.getElementById('dot3')];
 
+        // ─── Processing feedback helpers ────────────────────────────────────
+        const videoWrapper = document.querySelector('.video-wrapper');
+        const processingOverlay = document.getElementById('processingOverlay');
+        const processingText = document.getElementById('processingText');
+        let slowTimer = null;
+
+        function showProcessing() {
+            processingOverlay.classList.remove('hidden');
+            videoWrapper.classList.add('processing-active');
+            processingText.textContent = 'Mendeteksi wajah...';
+        }
+
+        function hideProcessing() {
+            processingOverlay.classList.add('hidden');
+            videoWrapper.classList.remove('processing-active');
+            clearTimeout(slowTimer);
+        }
+
+        // ─── Downscaled detection input ────────────────────────────────────
+        // Face detection runs on a downscaled frame (max 480px wide) to cut
+        // processing time on mobile. Detection accuracy is not meaningfully
+        // affected for a face reasonably framed in view. The ORIGINAL
+        // full-resolution video frame is still used separately for the actual
+        // photo capture/upload, so photo quality stays high.
+        const DETECT_MAX_WIDTH = 480;
+        let detectCanvas = null;
+        let detectCtx = null;
+
+        function getDetectionCanvas() {
+            if (!detectCanvas) {
+                detectCanvas = document.createElement('canvas');
+                detectCtx = detectCanvas.getContext('2d');
+            }
+            const scale = Math.min(1, DETECT_MAX_WIDTH / video.videoWidth);
+            detectCanvas.width = Math.round(video.videoWidth * scale);
+            detectCanvas.height = Math.round(video.videoHeight * scale);
+            // Mirror horizontally to match the displayed (mirrored) video
+            detectCtx.setTransform(-1, 0, 0, 1, detectCanvas.width, 0);
+            detectCtx.drawImage(video, 0, 0, detectCanvas.width, detectCanvas.height);
+            return detectCanvas;
+        }
+
+        // ─── Warm-up detection ─────────────────────────────────────────────
+        // Runs one throwaway detection after models load to warm up the
+        // model/WASM backend, so the first real user-triggered detection
+        // isn't paying a one-time initialization cost on top of normal time.
+        async function warmUpDetection() {
+            try {
+                await faceapi.detectSingleFace(
+                    getDetectionCanvas(),
+                    new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 })
+                );
+            } catch (e) {
+                // Best-effort warm-up — ignore failures
+            }
+        }
+
         // ─── Helper: show error inline ──────────────────────────────────────
         function showError(msg) {
             errorMsg.textContent = msg;
@@ -219,11 +290,15 @@
         }
 
         // ─── 1. Load face-api.js models ────────────────────────────────────
+        // ssdMobilenetv1 is used instead of tinyFaceDetector because it is
+        // significantly more accurate at locating faces. This reduces both
+        // missed detections and false matches. It is heavier to load, so the
+        // loading indicator above stays visible while the weights download.
         async function loadModels() {
             const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
 
             await Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
                 faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
                 faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
             ]);
@@ -254,11 +329,27 @@
             hideError();
 
             try {
-                // Run face detection + landmarks + descriptor on current video frame
+                // Show processing feedback immediately so the user knows work
+                // is happening (not frozen) while detection runs.
+                showProcessing();
+
+                // Run face detection + landmarks + descriptor on a DOWNSCALED
+                // frame for speed (see getDetectionCanvas).
+                const detectInput = getDetectionCanvas();
+
+                // Elapsed-time-aware messaging: if this detection takes longer
+                // than 2s (older/slower phones), reassure the user.
+                slowTimer = setTimeout(() => {
+                    processingText.textContent = 'Masih memproses, mohon tunggu...';
+                }, 2000);
+
                 const result = await faceapi
-                    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 }))
+                    .detectSingleFace(detectInput, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
                     .withFaceLandmarks()
                     .withFaceDescriptor();
+
+                clearTimeout(slowTimer);
+                hideProcessing();
 
                 if (!result) {
                     showError('Wajah tidak terdeteksi, coba lagi');
@@ -295,6 +386,7 @@
             } catch (err) {
                 showError('Terjadi kesalahan saat memproses wajah');
                 console.error(err);
+                hideProcessing();
             }
 
             isProcessing = false;
@@ -310,18 +402,14 @@
 
             try {
                 // ────────────────────────────────────────────────────────────
-                // Average the 3 descriptors element-wise to produce a single
-                // robust face embedding. Each descriptor is a Float32Array of
-                // 128 floats. We compute the arithmetic mean per dimension.
+                // Store all 3 descriptors SEPARATELY (array of arrays), instead
+                // of averaging them into one. Each descriptor is a Float32Array
+                // of 128 floats. Keeping all 3 preserves the natural variation
+                // in the registered face (angle/lighting), so check-in matching
+                // can compare against multiple reference points and take the
+                // best (minimum) distance.
                 // ────────────────────────────────────────────────────────────
-                const dims = captures[0].descriptor.length; // 128
-                const finalDescriptor = new Array(dims).fill(0);
-
-                for (const cap of captures) {
-                    for (let i = 0; i < dims; i++) {
-                        finalDescriptor[i] += cap.descriptor[i] / MAX_CAPTURES;
-                    }
-                }
+                const finalDescriptors = captures.map((cap) => cap.descriptor);
 
                 // Use the last captured photo as the reference
                 const finalPhoto = captures[captures.length - 1].photo;
@@ -336,7 +424,7 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                     },
                     body: JSON.stringify({
-                        descriptor: JSON.stringify(finalDescriptor),
+                        descriptor: JSON.stringify(finalDescriptors),
                         photo: finalPhoto,
                     }),
                 });
@@ -389,6 +477,10 @@
                 loadingState.classList.add('hidden');
                 cameraUi.classList.remove('hidden');
                 updateProgress();
+
+                // Fire-and-forget warm-up detection so the first real
+                // user-triggered detection doesn't pay one-time init cost.
+                warmUpDetection();
             } catch (err) {
                 // Error already handled in startCamera for camera issues
                 if (!cameraError.classList.contains('hidden')) return;

@@ -103,8 +103,13 @@ class AttendanceApiController extends Controller
      *
      * Face matching uses face-api.js euclidean distance:
      *   - Lower distance = better match
-     *   - Threshold: distance <= 0.6 → face_verified = true
+     *   - Threshold: distance <= 0.45 → face_verified = true
      *   - The raw euclidean distance is stored as face_match_score
+     *
+     * The tighter 0.45 threshold (was 0.6) reduces the false-accept rate where
+     * a different person's face could pass against another employee's reference.
+     * This is an acceptable tradeoff for a security-critical attendance system:
+     * genuine users may need good lighting/positioning to pass.
      *
      * Geofence uses the Haversine formula to calculate great-circle distance
      * between the employee's GPS coordinate and the office coordinate.
@@ -133,7 +138,8 @@ class AttendanceApiController extends Controller
 
             // ─── Face verification (HARD REJECT if mismatch) ───────────────
             // face-api.js euclidean distance: lower = better match.
-            // Threshold 0.6 is a commonly used cutoff for face-api.js.
+            // Threshold 0.45 (was 0.6) — tightened to reduce false-accept rate
+            // (a different person's face must NOT pass against a registered face).
             //
             // Face mismatch = hard reject (security/fraud prevention).
             // We reject BEFORE geofence calculation to avoid wasting compute
@@ -143,7 +149,7 @@ class AttendanceApiController extends Controller
             // drift, still worth recording for HR review).
             // ────────────────────────────────────────────────────────────────
             $faceMatchScore = (float) $request->face_match_score;
-            $faceVerified = $faceMatchScore <= 0.6;
+            $faceVerified = $faceMatchScore <= 0.45;
 
             if (! $faceVerified) {
                 Log::warning('Attendance face mismatch rejected', [
