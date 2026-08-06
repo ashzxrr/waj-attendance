@@ -28,7 +28,7 @@
 
         <!-- Login Card -->
         <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-slate-700/50">
-            <form method="POST" action="/admin/login" class="space-y-5">
+            <form method="POST" action="{{ url('/admin/login') }}" class="space-y-5">
                 @csrf
 
                 <!-- Error Message -->

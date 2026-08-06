@@ -144,7 +144,7 @@
                 <p id="resultMessage" class="text-center text-lg font-semibold"></p>
                 <p id="resultDetail" class="text-center text-sm text-slate-400"></p>
                 <div class="flex gap-3 pt-2">
-                    <a id="backToDashboardLink" href="/dashboard" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-medium rounded-xl transition-colors">
+                    <a id="backToDashboardLink" href="{{ url('/dashboard') }}" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-medium rounded-xl transition-colors">
                         Kembali ke Dashboard
                     </a>
                     <button onclick="location.reload()" class="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-medium rounded-xl transition-colors">
@@ -165,7 +165,6 @@
     <script>
         // ─── Token guard ────────────────────────────────────────────────────
         const APP_BASE_URL = document.querySelector('meta[name="app-base-url"]').content.replace(/\/$/, '');
-        document.getElementById('backToDashboardLink').href = `${APP_BASE_URL}/dashboard`;
         const token = localStorage.getItem('token');
         if (!token) {
             window.location.href = `${APP_BASE_URL}/login`;

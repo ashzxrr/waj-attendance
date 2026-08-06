@@ -54,13 +54,26 @@
                 <h1 class="text-2xl font-bold text-white">Admin Dashboard</h1>
                 <p class="text-slate-400 text-sm">Rekap absensi karyawan</p>
             </div>
-            <form method="POST" action="/admin/logout">
+            <form method="POST" action="{{ url('/admin/logout') }}">
                 @csrf
                 <button type="submit" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm rounded-xl transition-colors">
                     Logout
                 </button>
             </form>
         </div>
+
+        <!-- Flash Messages -->
+        @if (session('success'))
+            <div class="mb-6 px-4 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                <p class="text-emerald-400 text-sm">{{ session('success') }}</p>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="mb-6 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                <p class="text-red-400 text-sm">{{ session('error') }}</p>
+            </div>
+        @endif
 
         <!-- ─── Summary Cards ────────────────────────────────────────────── -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -88,6 +101,7 @@
                     <div>
                         <p class="text-slate-400 text-xs uppercase tracking-wider">Flagged Hari Ini</p>
                         <p class="text-2xl font-bold text-white">{{ $stats->flagged_today }}</p>
+                        <p class="text-slate-500 text-xs mt-1">Belum direview</p>
                     </div>
                 </div>
             </div>
@@ -109,7 +123,7 @@
 
         <!-- ─── Filter Bar ──────────────────────────────────────────────── -->
         <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-slate-700/50 mb-6">
-            <form method="GET" action="/admin/dashboard" class="flex flex-wrap gap-3 items-end">
+            <form method="GET" action="{{ url('/admin/dashboard') }}" class="flex flex-wrap gap-3 items-end">
                 <div>
                     <label for="tanggal" class="block text-xs text-slate-400 mb-1">Tanggal</label>
                     <input type="date" id="tanggal" name="tanggal" value="{{ request('tanggal') }}"
@@ -123,6 +137,7 @@
                         <option value="verified" @selected(request('status') === 'verified')>Verified</option>
                         <option value="flagged" @selected(request('status') === 'flagged')>Flagged</option>
                         <option value="pending" @selected(request('status') === 'pending')>Pending</option>
+                        <option value="rejected" @selected(request('status') === 'rejected')>Rejected</option>
                     </select>
                 </div>
                 <div class="flex-1 min-w-[160px]">
@@ -136,7 +151,7 @@
                     Filter
                 </button>
                 @if (request()->anyFilled(['tanggal', 'status', 'pin']))
-                    <a href="/admin/dashboard"
+                    <a href="{{ url('/admin/dashboard') }}"
                        class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors">
                         Reset
                     </a>
@@ -160,6 +175,7 @@
                             <th class="px-4 py-3 text-slate-400 font-medium text-xs uppercase tracking-wider">Face Score</th>
                             <th class="px-4 py-3 text-slate-400 font-medium text-xs uppercase tracking-wider">Foto</th>
                             <th class="px-4 py-3 text-slate-400 font-medium text-xs uppercase tracking-wider">Device</th>
+                            <th class="px-4 py-3 text-slate-400 font-medium text-xs uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-700/50">
@@ -188,12 +204,18 @@
                                             'verified' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
                                             'flagged' => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
                                             'pending' => 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+                                            'rejected' => 'bg-rose-500/10 text-rose-400 border-rose-500/20',
                                         ];
                                         $color = $statusColors[$log->status] ?? $statusColors['pending'];
                                     @endphp
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border {{ $color }}">
                                         {{ ucfirst($log->status) }}
                                     </span>
+                                    @if ($log->reviewed_by)
+                                        <span class="ml-2 text-xs text-slate-500" title="Direview oleh {{ $log->reviewed_by }}">
+                                            ({{ $log->reviewed_by }})
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 text-slate-300 whitespace-nowrap">
                                     @if ($log->distance_from_office !== null)
@@ -217,7 +239,7 @@
                                 <td class="px-4 py-3">
                                     @if ($log->photo_path)
                                         @php
-                                            $photoUrl = \Illuminate\Support\Facades\Storage::url($log->photo_path);
+                                            $photoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($log->photo_path);
                                         @endphp
                                         <a href="{{ $photoUrl }}" target="_blank">
                                             <img src="{{ $photoUrl }}"
@@ -238,10 +260,31 @@
                                         <span class="text-slate-500">-</span>
                                     @endif
                                 </td>
+                                <td class="px-4 py-3">
+                                    @if ($log->status === 'flagged')
+                                        <div class="flex gap-2">
+                                            <form method="POST" action="{{ url('/admin/attendance/' . $log->id . '/approve') }}" onsubmit="return confirm('Yakin absensi ini valid?');">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded-lg transition-colors">
+                                                    Setujui
+                                                </button>
+                                            </form>
+                                            <button onclick="openRejectModal({{ $log->id }})" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium rounded-lg transition-colors">
+                                                Tolak
+                                            </button>
+                                        </div>
+                                    @elseif (in_array($log->status, ['verified', 'rejected']))
+                                        @if ($log->reviewed_by)
+                                            <span class="text-xs text-slate-500" title="Direview oleh {{ $log->reviewed_by }}">
+                                                Direview oleh {{ $log->reviewed_by }}
+                                            </span>
+                                        @endif
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="px-4 py-12 text-center text-slate-500">
+                                <td colspan="11" class="px-4 py-12 text-center text-slate-500">
                                     <svg class="w-12 h-12 mx-auto mb-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
                                     </svg>
@@ -266,5 +309,57 @@
             &copy; {{ date('Y') }} WAJ Attendance System
         </p>
     </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="bg-slate-800 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-700">
+            <h3 class="text-lg font-semibold text-white mb-4">Tolak Absensi</h3>
+            <form method="POST" id="rejectForm" action="">
+                @csrf
+                <div class="mb-4">
+                    <label for="reason" class="block text-sm text-slate-400 mb-2">Alasan penolakan</label>
+                    <textarea id="reason" name="reason" rows="3" required
+                              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                              placeholder="Masukkan alasan penolakan..."></textarea>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" onclick="closeRejectModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white text-sm font-medium rounded-lg transition-colors">
+                        Tolak
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openRejectModal(id) {
+            document.getElementById('rejectForm').action = '{{ url('/admin/attendance') }}/' + id + '/reject';
+            document.getElementById('rejectModal').classList.remove('hidden');
+            document.getElementById('rejectModal').classList.add('flex');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+            document.getElementById('rejectModal').classList.remove('flex');
+            document.getElementById('reason').value = '';
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeRejectModal();
+            }
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('rejectModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectModal();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AttendanceLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -109,5 +110,50 @@ class AdminController extends Controller
         ];
 
         return view('admin.dashboard', compact('logs', 'stats'));
+    }
+
+    /**
+     * Approve a flagged attendance record.
+     */
+    public function approveAttendance(Request $request, $id)
+    {
+        $log = AttendanceLog::findOrFail($id);
+
+        if ($log->status !== 'flagged') {
+            return back()->with('error', 'Hanya dapat menyetujui absensi dengan status flagged');
+        }
+
+        $log->update([
+            'status' => 'verified',
+            'reviewed_by' => Auth::guard('admin')->user()->username,
+            'reviewed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Absensi disetujui, akan disinkronkan ke HRIS');
+    }
+
+    /**
+     * Reject a flagged attendance record.
+     */
+    public function rejectAttendance(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $log = AttendanceLog::findOrFail($id);
+
+        if ($log->status !== 'flagged') {
+            return back()->with('error', 'Hanya dapat menolak absensi dengan status flagged');
+        }
+
+        $log->update([
+            'status' => 'rejected',
+            'reviewed_by' => Auth::guard('admin')->user()->username,
+            'reviewed_at' => now(),
+            'review_note' => $request->reason,
+        ]);
+
+        return back()->with('success', 'Absensi ditolak');
     }
 }

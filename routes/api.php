@@ -22,4 +22,5 @@ Route::middleware('auth:sanctum')->prefix('attendance')->group(function () {
     Route::get('/office-location', [AttendanceApiController::class, 'getOfficeLocation']);
     Route::get('/next-type', [AttendanceApiController::class, 'determineNextType']);
     Route::post('/store', [AttendanceApiController::class, 'store']);
+    Route::get('/history', [AttendanceApiController::class, 'history']);
 });

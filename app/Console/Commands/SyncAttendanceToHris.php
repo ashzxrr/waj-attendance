@@ -43,6 +43,9 @@ class SyncAttendanceToHris extends Command
             ->whereIn('status', $statuses)
             ->orderBy('id');
 
+        // Note: Flagged attendance records that are approved by admin become status='verified'
+        // and will be automatically picked up by the next sync run (no manual intervention needed)
+
         $totalProcessed = 0;
         $totalSynced = 0;
         $totalFailed = 0;
@@ -58,7 +61,7 @@ class SyncAttendanceToHris extends Command
                     // Build a public URL that the HRIS server can fetch over the network.
                     // This requires the waj-attendance server to be reachable from the HRIS server's network.
                     // In the current dev setup, a laptop/local IP can make this fragile if the address changes.
-                    $photoUrl = url('storage/' . ltrim($record->photo_path, '/'));
+                    $photoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($record->photo_path);
                 }
 
                 return [

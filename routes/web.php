@@ -31,6 +31,10 @@ Route::get('/profile', function () {
     return view('profile');
 });
 
+Route::get('/riwayat', function () {
+    return view('attendance.history');
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin Dashboard Routes (traditional session-based auth)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,4 +45,6 @@ Route::post('/admin/login', [AdminController::class, 'login']);
 Route::middleware('admin.auth')->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     Route::post('/admin/logout', [AdminController::class, 'logout']);
+    Route::post('/admin/attendance/{id}/approve', [AdminController::class, 'approveAttendance']);
+    Route::post('/admin/attendance/{id}/reject', [AdminController::class, 'rejectAttendance']);
 });

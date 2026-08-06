@@ -42,14 +42,13 @@
         </div>
 
         <!-- Absen Button -->
-        <a href="/absen" id="absenLink" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98]">
+        <a href="{{ url('/absen') }}" id="absenLink" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98]">
             Absen Sekarang
         </a>
     </div>
 
     <script>
         const APP_BASE_URL = document.querySelector('meta[name="app-base-url"]').content.replace(/\/$/, '');
-        document.getElementById('absenLink').href = `${APP_BASE_URL}/absen`;
 
         // ─── Token guard: redirect to login if no token ────────────────────
         const token = localStorage.getItem('token');

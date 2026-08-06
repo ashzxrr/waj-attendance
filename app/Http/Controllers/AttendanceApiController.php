@@ -250,4 +250,85 @@ class AttendanceApiController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Return the authenticated employee's attendance history.
+     *
+     * Rejected records are intentionally excluded from employee-facing history
+     * to avoid confusion/dispute — those are only visible to HR/admin via the admin dashboard.
+     */
+    public function history(Request $request): JsonResponse
+    {
+        try {
+            $pin = $request->user()->pin;
+
+            // Get month parameter, default to current month
+            $bulan = $request->query('bulan', now()->format('Y-m'));
+
+            // Validate month format (YYYY-MM)
+            if (!preg_match('/^\d{4}-\d{2}$/', $bulan)) {
+                return response()->json([
+                    'message' => 'Format bulan tidak valid. Gunakan format YYYY-MM.',
+                ], 422);
+            }
+
+            // Parse month to get start and end dates
+            $monthStart = \Carbon\Carbon::parse($bulan . '-01')->startOfMonth();
+            $monthEnd = $monthStart->copy()->endOfMonth();
+
+            // Build query for employee's attendance records
+            // Only show verified and flagged status (exclude rejected and pending)
+            $query = AttendanceLog::where('pin', $pin)
+                ->whereBetween('tanggal', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+                ->whereIn('status', ['verified', 'flagged'])
+                ->orderBy('datetime', 'desc');
+
+            // Paginate results (20 per page)
+            $logs = $query->paginate(20);
+
+            // Calculate monthly summary
+            $summary = [
+                'total_hari_hadir' => AttendanceLog::where('pin', $pin)
+                    ->whereBetween('tanggal', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+                    ->where('status', 'verified')
+                    ->distinct('tanggal')
+                    ->count('tanggal'),
+                'total_flagged' => AttendanceLog::where('pin', $pin)
+                    ->whereBetween('tanggal', [$monthStart->format('Y-m-d'), $monthEnd->format('Y-m-d')])
+                    ->where('status', 'flagged')
+                    ->count(),
+            ];
+
+            // Format logs for response
+            $formattedLogs = $logs->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'tanggal' => $log->tanggal,
+                    'jam' => \Carbon\Carbon::parse($log->datetime)->format('H:i:s'),
+                    'type' => $log->type,
+                    'status' => $log->status,
+                    'photo_path' => $log->photo_path ? Storage::disk('public')->url($log->photo_path) : null,
+                    'distance_from_office' => $log->distance_from_office,
+                    'is_within_geofence' => $log->is_within_geofence,
+                ];
+            });
+
+            return response()->json([
+                'bulan' => $bulan,
+                'summary' => $summary,
+                'logs' => $formattedLogs,
+                'pagination' => [
+                    'current_page' => $logs->currentPage(),
+                    'last_page' => $logs->lastPage(),
+                    'per_page' => $logs->perPage(),
+                    'total' => $logs->total(),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan server.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

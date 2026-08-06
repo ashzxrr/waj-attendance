@@ -23,6 +23,9 @@ class AttendanceLog extends Model
         'device_info',
         'status',
         'synced_to_hris_at',
+        'reviewed_by',
+        'reviewed_at',
+        'review_note',
     ];
 
     protected function casts(): array
@@ -37,6 +40,7 @@ class AttendanceLog extends Model
             'face_match_score' => 'float',
             'face_verified' => 'boolean',
             'synced_to_hris_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 
