@@ -117,12 +117,8 @@ class SyncAttendanceToHris extends Command
 
                 if (! $dumpedFirstFailure) {
                     $dumpedFirstFailure = true;
-                    Log::warning('HRIS attendance sync failed with response body', [
-                        'chunk_ids' => $ids,
-                        'status_code' => $response->status(),
-                        'response_body' => $responseBody,
-                    ]);
-                    $this->warn('  First failed response body logged for debugging.');
+                    $this->line('  First failed response body:');
+                    dump($responseBody);
                 }
 
                 return;
