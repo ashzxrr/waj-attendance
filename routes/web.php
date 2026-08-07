@@ -17,22 +17,24 @@ Route::get('/', fn() => redirect('/login'));
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
-Route::get('/face-registration', [FaceRegistrationController::class, 'show']);
+Route::middleware('employee.auth')->group(function () {
+    Route::get('/face-registration', [FaceRegistrationController::class, 'show']);
 
-Route::get('/absen', function () {
-    return view('attendance.checkin');
-});
+    Route::get('/absen', function () {
+        return view('attendance.checkin');
+    });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-});
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    });
 
-Route::get('/profile', function () {
-    return view('profile');
-});
+    Route::get('/profile', function () {
+        return view('profile');
+    });
 
-Route::get('/riwayat', function () {
-    return view('attendance.history');
+    Route::get('/riwayat', function () {
+        return view('attendance.history');
+    });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
