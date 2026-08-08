@@ -89,12 +89,11 @@
     <div class="relative z-10 w-full max-w-[440px]">
         <!-- Logo / Header -->
         <div class="text-center mb-7 anim-fade-slide-down">
-            <div class="inline-flex items-center justify-center w-[100px] h-[100px] sm:w-[110px] sm:h-[110px] mb-4">
+            <div class="inline-flex items-center justify-center w-[100px] h-[100px] sm:w-[110px] sm:h-[110px] mb-4 rounded-[28px] overflow-hidden bg-white/80 p-2 shadow-[0_12px_28px_rgba(251,191,36,0.25)]">
                 <img src="{{ asset('images/logo.png') }}" alt="WAJ Attendance"
-                     class="w-full h-full object-contain drop-shadow-[0_12px_28px_rgba(251,191,36,0.35)]" />
+                     class="w-full h-full object-contain rounded-[20px]" />
             </div>
-            <h1 class="text-[28px] font-extrabold tracking-tight text-[#111827] leading-none">WAJ</h1>
-            <p class="mt-1.5 text-[11px] font-bold tracking-[0.35em] text-amber-600 uppercase">Attendance</p>
+            <h1 class="text-[28px] font-extrabold tracking-tight text-[#111827] leading-none">Attendance</h1>
             <h2 class="mt-6 text-2xl sm:text-[26px] font-bold text-[#111827] leading-tight">Selamat datang! 👋</h2>
             <p class="mt-2 text-sm sm:text-[15px] text-gray-500">Masuk untuk melanjutkan absensi Anda</p>
         </div>
