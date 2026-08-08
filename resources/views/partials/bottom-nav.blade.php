@@ -1,16 +1,16 @@
-<nav class="fixed inset-x-0 bottom-0 border-t border-slate-700/80 bg-slate-950/95 backdrop-blur-xl z-30">
+<nav class="fixed inset-x-0 bottom-0 z-30 border-t border-amber-200/60 bg-white/85 backdrop-blur-xl">
     <div class="max-w-lg mx-auto px-4 py-3">
         <div class="grid grid-cols-4 gap-2">
             @php $path = request()->path(); @endphp
 
-            <a href="{{ url('/dashboard') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'dashboard' ? 'bg-emerald-500/15 text-emerald-300' : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-100' }}">
+            <a href="{{ url('/dashboard') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'dashboard' ? 'bg-[#FFF7D6] text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-[#FFF7D6] hover:text-amber-700' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
                 </svg>
                 <span>Dashboard</span>
             </a>
 
-            <a href="{{ url('/absen') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'absen' ? 'bg-emerald-500/15 text-emerald-300' : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-100' }}">
+            <a href="{{ url('/absen') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'absen' ? 'bg-[#FFF7D6] text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-[#FFF7D6] hover:text-amber-700' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
@@ -19,14 +19,14 @@
                 <span>Absen</span>
             </a>
 
-            <a href="{{ url('/riwayat') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'riwayat' ? 'bg-emerald-500/15 text-emerald-300' : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-100' }}">
+            <a href="{{ url('/riwayat') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'riwayat' ? 'bg-[#FFF7D6] text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-[#FFF7D6] hover:text-amber-700' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <span>Riwayat</span>
             </a>
 
-            <a href="{{ url('/profile') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'profile' ? 'bg-emerald-500/15 text-emerald-300' : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-100' }}">
+            <a href="{{ url('/profile') }}" class="flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-sm font-medium transition-all {{ $path === 'profile' ? 'bg-[#FFF7D6] text-amber-700 shadow-sm' : 'text-gray-500 hover:bg-[#FFF7D6] hover:text-amber-700' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-3-3.87"/>
                     <path d="M4 21v-2a4 4 0 0 1 3-3.87"/>

@@ -7,38 +7,45 @@
     <script src="{{ asset('vendor/tailwind/tailwind-play.js') }}"></script>
     @include('partials.base-url-meta')
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(251,191,36,0.20), transparent 38%),
+                radial-gradient(circle at bottom left, rgba(253,230,138,0.20), transparent 32%),
+                radial-gradient(circle at 50% 0%, rgba(254,243,199,0.35), transparent 45%),
+                #FFFDF7;
             min-height: 100vh;
+            color: #111827;
         }
     </style>
 </head>
-<body class="p-4">
+<body class="min-h-screen px-4 py-5">
     <div class="max-w-lg mx-auto pb-28">
-        <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-xl font-bold text-white">Riwayat Absensi</h1>
-                <p class="text-slate-400 text-sm" id="employeeName">Karyawan</p>
+                <h1 class="text-2xl font-bold text-[#111827]">Riwayat Absensi</h1>
+                <p class="text-gray-500 text-sm" id="employeeName">Karyawan</p>
             </div>
-            <button id="logoutBtn" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm rounded-xl transition-colors">
+            <button id="logoutBtn" class="px-4 py-2 bg-white/80 hover:bg-white text-gray-700 text-sm rounded-2xl border border-amber-200 shadow-sm transition-all">
                 Logout
             </button>
         </div>
 
         <!-- Month Selector -->
-        <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-slate-700/50 mb-6">
+        <div class="soft-card rounded-[24px] p-4 mb-6">
             <div class="flex items-center justify-between">
-                <button id="prevMonthBtn" class="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors">
+                <button id="prevMonthBtn" class="p-2 rounded-xl bg-[#FFF7D6] hover:bg-amber-100 text-amber-700 transition-colors border border-amber-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </button>
                 <div class="text-center">
-                    <p id="currentMonthLabel" class="text-white font-semibold text-lg">-</p>
-                    <p class="text-slate-400 text-xs">Bulan ini</p>
+                    <p id="currentMonthLabel" class="text-[#111827] font-semibold text-lg">-</p>
+                    <p class="text-gray-500 text-xs">Bulan ini</p>
                 </div>
-                <button id="nextMonthBtn" class="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 transition-colors">
+                <button id="nextMonthBtn" class="p-2 rounded-xl bg-[#FFF7D6] hover:bg-amber-100 text-amber-700 transition-colors border border-amber-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
@@ -48,54 +55,54 @@
 
         <!-- Summary Cards -->
         <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-slate-700/50">
+            <div class="soft-card rounded-[24px] p-4">
                 <div class="flex items-center gap-3">
-                    <div class="p-2 rounded-xl bg-emerald-500/10">
-                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-2 rounded-xl bg-[#FFF7D6] border border-amber-200">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-slate-400 text-xs">Hadir</p>
-                        <p id="totalHadir" class="text-white font-bold text-xl">-</p>
+                        <p class="text-gray-500 text-xs">Hadir</p>
+                        <p id="totalHadir" class="text-[#111827] font-bold text-xl">-</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-slate-700/50">
+            <div class="soft-card rounded-[24px] p-4">
                 <div class="flex items-center gap-3">
-                    <div class="p-2 rounded-xl bg-amber-500/10">
-                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="p-2 rounded-xl bg-[#FFF7D6] border border-amber-200">
+                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                         </svg>
                     </div>
                     <div>
-                        <p class="text-slate-400 text-xs">Direview</p>
-                        <p id="totalFlagged" class="text-white font-bold text-xl">-</p>
+                        <p class="text-gray-500 text-xs">Direview</p>
+                        <p id="totalFlagged" class="text-[#111827] font-bold text-xl">-</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Loading State -->
-        <div id="loadingState" class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-slate-700/50 text-center">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-700/50 mb-4">
-                <svg class="w-6 h-6 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24">
+        <div id="loadingState" class="soft-card rounded-[24px] p-8 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#FFF7D6] border border-amber-200 mb-4">
+                <svg class="w-6 h-6 text-amber-600 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
             </div>
-            <p class="text-slate-400 text-sm">Memuat riwayat absensi...</p>
+            <p class="text-gray-500 text-sm">Memuat riwayat absensi...</p>
         </div>
 
         <!-- Empty State -->
-        <div id="emptyState" class="hidden bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-slate-700/50 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-700/50 mb-4">
-                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div id="emptyState" class="hidden soft-card rounded-[24px] p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#FFF7D6] border border-amber-200 mb-4">
+                <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
             </div>
-            <p class="text-slate-400 text-sm">Belum ada riwayat absensi bulan ini</p>
+            <p class="text-gray-500 text-sm">Belum ada riwayat absensi bulan ini</p>
         </div>
 
         <!-- Attendance List -->
@@ -105,25 +112,25 @@
 
         <!-- Pagination -->
         <div id="paginationContainer" class="hidden mt-6 flex justify-center gap-2">
-            <button id="prevPageBtn" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="prevPageBtn" class="px-4 py-2 bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 Sebelumnya
             </button>
-            <span id="pageInfo" class="px-4 py-2 text-slate-400 text-sm">-</span>
-            <button id="nextPageBtn" class="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span id="pageInfo" class="px-4 py-2 text-gray-500 text-sm">-</span>
+            <button id="nextPageBtn" class="px-4 py-2 bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 Selanjutnya
             </button>
         </div>
     </div>
 
     <!-- Photo Modal -->
-    <div id="photoModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div id="photoModal" class="fixed inset-0 bg-[#FFFDF7]/80 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="relative max-w-4xl max-h-[90vh] w-full mx-4">
-            <button onclick="closePhotoModal()" class="absolute -top-10 right-0 text-white hover:text-emerald-400 transition-colors">
+            <button onclick="closePhotoModal()" class="absolute -top-10 right-0 text-[#111827] hover:text-amber-600 transition-colors">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <img id="modalImage" src="" alt="Foto absen" class="w-full h-full object-contain rounded-lg">
+            <img id="modalImage" src="" alt="Foto absen" class="w-full h-full object-contain rounded-[24px] border border-amber-200 bg-white shadow-[0_20px_60px_rgba(180,140,30,0.12)]">
         </div>
     </div>
 
@@ -288,7 +295,7 @@
 
         function createDateCard(date, records) {
             const card = document.createElement('div');
-            card.className = 'bg-slate-800/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-slate-700/50';
+            card.className = 'soft-card rounded-[24px] p-4';
 
             const dateObj = new Date(date);
             const formattedDate = dateObj.toLocaleDateString('id-ID', { 
@@ -299,7 +306,7 @@
 
             let html = `
                 <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-white font-semibold">${formattedDate}</h3>
+                    <h3 class="text-[#111827] font-semibold">${formattedDate}</h3>
                 </div>
                 <div class="space-y-2">
             `;
@@ -311,12 +318,12 @@
                 const statusLabel = record.status === 'verified' ? 'Terverifikasi' : 'Menunggu Review';
 
                 html += `
-                    <div class="flex items-center justify-between p-3 bg-slate-900/50 rounded-xl">
+                    <div class="flex items-center justify-between p-3 bg-[#FFFDF5] rounded-2xl border border-amber-100">
                         <div class="flex items-center gap-3">
                             <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium border ${typeColor}">
                                 ${typeLabel}
                             </span>
-                            <span class="text-white font-medium">${record.jam}</span>
+                            <span class="text-[#111827] font-medium">${record.jam}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium border ${statusColor}">
@@ -325,11 +332,11 @@
                             ${record.photo_path ? `
                                 <img src="${record.photo_path}" 
                                      alt="Foto absen" 
-                                     class="w-10 h-10 rounded-lg object-cover border border-slate-600 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                                     class="w-10 h-10 rounded-xl object-cover border border-amber-200 cursor-pointer hover:border-amber-400 transition-colors"
                                      onclick="openPhotoModal('${record.photo_path}')">
                             ` : `
-                                <div class="w-10 h-10 rounded-lg bg-slate-700/50 border border-slate-600 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-10 h-10 rounded-xl bg-[#FFF7D6] border border-amber-200 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
                                 </div>

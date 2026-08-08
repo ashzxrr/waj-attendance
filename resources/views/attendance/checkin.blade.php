@@ -9,17 +9,25 @@
     <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(251,191,36,0.20), transparent 38%),
+                radial-gradient(circle at bottom left, rgba(253,230,138,0.20), transparent 32%),
+                radial-gradient(circle at 50% 0%, rgba(254,243,199,0.35), transparent 45%),
+                #FFFDF7;
             min-height: 100vh;
+            color: #111827;
         }
         #video {
             width: 100%;
             max-width: 360px;
             height: auto;
-            border-radius: 1rem;
+            border-radius: 1.25rem;
             transform: scaleX(-1);
-            background: #1e293b;
+            background: #fff7d6;
         }
         .video-wrapper {
             position: relative;
@@ -50,33 +58,31 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center p-4 min-h-screen">
+<body class="flex items-center justify-center px-4 py-5 min-h-screen">
     <div class="w-full max-w-sm pb-28">
-        <!-- Header -->
         <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30 mb-3">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 shadow-[0_10px_25px_rgba(251,191,36,0.25)] mb-3">
+                <svg class="w-8 h-8 text-[#111827]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
-            <h1 class="text-xl font-bold text-white">Absensi</h1>
-            <p class="text-slate-400 text-sm mt-1" id="typeLabel">Memuat...</p>
+            <h1 class="text-2xl font-bold text-[#111827]">Absensi</h1>
+            <p class="text-gray-500 text-sm mt-1" id="typeLabel">Memuat...</p>
         </div>
 
-        <!-- Main Card -->
-        <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-5 shadow-xl border border-slate-700/50">
+        <div class="soft-card rounded-[28px] p-5 sm:p-6">
 
             <!-- Loading State -->
             <div id="loadingState" class="text-center py-8">
                 <div class="loading-spinner"></div>
-                <p class="text-slate-300 text-sm">Memuat sistem absensi...</p>
-                <p class="text-slate-500 text-xs mt-1">Mengunduh model dan data referensi</p>
+                <p class="text-[#111827] text-sm">Memuat sistem absensi...</p>
+                <p class="text-gray-500 text-xs mt-1">Mengunduh model dan data referensi</p>
             </div>
 
             <!-- Camera & Capture UI -->
             <div id="cameraUi" class="hidden space-y-4">
                 <!-- Info: type + location -->
-                <div id="infoBar" class="bg-slate-700/50 rounded-xl p-3 text-sm text-slate-300 text-center hidden">
+                <div id="infoBar" class="bg-[#FFF7D6] border border-amber-200 rounded-2xl p-3 text-sm text-amber-700 text-center hidden">
                 </div>
 
                 <!-- Video -->
@@ -84,30 +90,30 @@
                     <div class="video-wrapper">
                         <video id="video" autoplay playsinline></video>
                         <!-- Processing overlay: shown while detection is running -->
-                        <div id="processingOverlay" class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-slate-950/60 backdrop-blur-sm z-10">
-                            <div class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mb-2"></div>
-                            <p id="processingText" class="text-emerald-300 text-sm font-medium">Mendeteksi wajah...</p>
+                        <div id="processingOverlay" class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-[20px] bg-white/70 backdrop-blur-sm z-10">
+                            <div class="w-10 h-10 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-2"></div>
+                            <p id="processingText" class="text-amber-700 text-sm font-medium">Mendeteksi wajah...</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Face Mismatch Persistent Alert -->
-                <div id="faceMismatchAlert" class="hidden bg-red-500/15 border-2 border-red-500/40 rounded-xl p-4 text-center">
-                    <svg class="w-10 h-10 text-red-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div id="faceMismatchAlert" class="hidden bg-red-50 border border-red-200 rounded-2xl p-4 text-center">
+                    <svg class="w-10 h-10 text-red-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
                     </svg>
-                    <p class="text-red-300 text-sm font-medium">Wajah tidak dikenali</p>
-                    <p class="text-red-400/80 text-xs mt-1">Pastikan wajah Anda terlihat jelas di kamera, pencahayaan cukup, lalu coba lagi.</p>
+                    <p class="text-red-600 text-sm font-medium">Wajah tidak dikenali</p>
+                    <p class="text-red-500/80 text-xs mt-1">Pastikan wajah Anda terlihat jelas di kamera, pencahayaan cukup, lalu coba lagi.</p>
                 </div>
 
                 <!-- Error Message -->
-                <div id="errorMessage" class="hidden bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl p-3 text-center">
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl p-3 text-center">
                 </div>
 
                 <!-- Capture Button -->
                 <button
                     id="captureBtn"
-                    class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full h-[54px] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#111827] font-bold text-base rounded-2xl shadow-[0_10px_25px_rgba(251,191,36,0.35)] hover:shadow-[0_14px_30px_rgba(251,191,36,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     Ambil Absen
                 </button>
@@ -119,9 +125,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
-                <p class="text-red-400 text-sm mb-3">Lokasi tidak dapat diakses.</p>
-                <p class="text-slate-400 text-xs mb-4">Aktifkan GPS/lokasi dan izinkan akses lokasi.</p>
-                <button onclick="location.reload()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-xl transition-colors">
+                <p class="text-red-500 text-sm mb-3">Lokasi tidak dapat diakses.</p>
+                <p class="text-gray-500 text-xs mb-4">Aktifkan GPS/lokasi dan izinkan akses lokasi.</p>
+                <button onclick="location.reload()" class="px-5 py-2 bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 text-sm rounded-2xl transition-colors">
                     Coba Lagi
                 </button>
             </div>
@@ -131,9 +137,9 @@
                 <svg class="w-12 h-12 text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                 </svg>
-                <p class="text-red-400 text-sm mb-3">Kamera tidak dapat diakses.</p>
-                <p class="text-slate-400 text-xs mb-4">Pastikan Anda mengizinkan akses kamera.</p>
-                <button onclick="location.reload()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-xl transition-colors">
+                <p class="text-red-500 text-sm mb-3">Kamera tidak dapat diakses.</p>
+                <p class="text-gray-500 text-xs mb-4">Pastikan Anda mengizinkan akses kamera.</p>
+                <button onclick="location.reload()" class="px-5 py-2 bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 text-sm rounded-2xl transition-colors">
                     Coba Lagi
                 </button>
             </div>
@@ -142,12 +148,12 @@
             <div id="resultCard" class="hidden space-y-4">
                 <div id="resultIcon" class="text-center"></div>
                 <p id="resultMessage" class="text-center text-lg font-semibold"></p>
-                <p id="resultDetail" class="text-center text-sm text-slate-400"></p>
+                <p id="resultDetail" class="text-center text-sm text-gray-500"></p>
                 <div class="flex gap-3 pt-2">
-                    <a id="backToDashboardLink" href="{{ url('/dashboard') }}" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-medium rounded-xl transition-colors">
+                    <a id="backToDashboardLink" href="{{ url('/dashboard') }}" class="flex-1 h-[48px] bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 text-center font-semibold rounded-2xl transition-colors flex items-center justify-center">
                         Kembali ke Dashboard
                     </a>
-                    <button onclick="location.reload()" class="flex-1 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-medium rounded-xl transition-colors">
+                    <button onclick="location.reload()" class="flex-1 h-[48px] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#111827] font-semibold rounded-2xl transition-colors">
                         Absen Lagi
                     </button>
                 </div>
@@ -155,7 +161,7 @@
         </div>
 
         <!-- Footer -->
-        <p class="text-center text-slate-500 text-xs mt-6">
+        <p class="text-center text-gray-400 text-xs mt-6">
             &copy; {{ date('Y') }} WAJ Attendance System
         </p>
     </div>
@@ -309,12 +315,27 @@
         // security-critical attendance system. It is heavier to load, so the
         // loading indicator stays visible while the weights download.
         async function loadModels() {
-            const MODEL_URL = '{{ asset('vendor/face-api/models') }}';
-            await Promise.all([
-                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-            ]);
+            if (window.faceApiModelsLoaded) {
+                return;
+            }
+
+            if (!window.faceApiModelsLoadPromise) {
+                const MODEL_URL = '{{ asset('vendor/face-api/models') }}';
+                window.faceApiModelsLoadPromise = Promise.all([
+                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+                ])
+                    .then(() => {
+                        window.faceApiModelsLoaded = true;
+                    })
+                    .catch((err) => {
+                        window.faceApiModelsLoadPromise = null;
+                        throw err;
+                    });
+            }
+
+            return window.faceApiModelsLoadPromise;
         }
 
         // ─── 3. Get geolocation ────────────────────────────────────────────
@@ -355,6 +376,23 @@
                 cameraError.classList.remove('hidden');
                 throw err;
             }
+        }
+
+        function capturePhoto(videoElement, maxWidth = 640, quality = 0.8) {
+            const naturalWidth = videoElement.videoWidth;
+            const naturalHeight = videoElement.videoHeight;
+            const scale = Math.min(1, maxWidth / naturalWidth);
+            const width = Math.round(naturalWidth * scale);
+            const height = Math.round(naturalHeight * scale);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(videoElement, 0, 0, width, height);
+            return canvas.toDataURL('image/jpeg', quality);
         }
 
         // ─── 5. Capture & verify face (multi-frame consensus) ──────────────
@@ -448,15 +486,10 @@
                 // sent to the backend.
                 const finalScore = passingScores.reduce((sum, d) => sum + d, 0) / passingScores.length;
 
-                // Capture frame as base64 JPEG (from the current live video)
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-                ctx.drawImage(video, 0, 0);
-                const photo = canvas.toDataURL('image/jpeg', 0.85);
+                // Capture the saved attendance photo at a lower upload resolution.
+                // The live detection still uses downscaled inputs for speed, but the
+                // saved photo only needs enough quality for review, not full camera size.
+                const photo = capturePhoto(video, 640, 0.8);
 
                 // Detection is done — hide the processing indicator before submit.
                 hideProcessing();

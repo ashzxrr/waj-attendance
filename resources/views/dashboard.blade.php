@@ -2,47 +2,52 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard - WAJ Attendance</title>
     <script src="{{ asset('vendor/tailwind/tailwind-play.js') }}"></script>
     @include('partials.base-url-meta')
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(251,191,36,0.20), transparent 38%),
+                radial-gradient(circle at bottom left, rgba(253,230,138,0.20), transparent 32%),
+                radial-gradient(circle at 50% 0%, rgba(254,243,199,0.35), transparent 45%),
+                #FFFDF7;
             min-height: 100vh;
+            color: #111827;
         }
     </style>
 </head>
-<body class="p-4">
+<body class="min-h-screen px-4 py-5">
     <div class="max-w-lg mx-auto pb-28">
-        <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <div>
-                <h1 class="text-xl font-bold text-white">Dashboard</h1>
-                <p class="text-slate-400 text-sm" id="employeeName">Selamat datang</p>
+                <h1 class="text-2xl font-bold text-[#111827]">Dashboard</h1>
+                <p class="text-gray-500 text-sm mt-1" id="employeeName">Selamat datang</p>
             </div>
-            <button id="logoutBtn" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-sm rounded-xl transition-colors">
+            <button id="logoutBtn" class="px-4 py-2 bg-white/80 hover:bg-white text-gray-700 text-sm rounded-2xl border border-amber-200 shadow-sm transition-all">
                 Logout
             </button>
         </div>
 
-        <!-- Info Card -->
-        <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-slate-700/50 text-center">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30 mb-4">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="soft-card rounded-[28px] p-6 sm:p-7 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-[0_10px_25px_rgba(251,191,36,0.25)] mb-4">
+                <svg class="w-10 h-10 text-[#111827]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
             </div>
-            <h2 class="text-lg font-semibold text-white mb-1" id="displayName">Karyawan</h2>
-            <p class="text-slate-400 text-sm" id="displayPin">PIN: -</p>
-            <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-xl">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span class="text-emerald-400 text-sm">Wajah terdaftar</span>
+            <h2 class="text-lg font-bold text-[#111827] mb-1" id="displayName">Karyawan</h2>
+            <p class="text-gray-500 text-sm" id="displayPin">PIN: -</p>
+            <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#FFF7D6] border border-amber-200">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span class="text-amber-700 text-sm font-medium">Wajah terdaftar</span>
             </div>
         </div>
 
-        <!-- Absen Button -->
-        <a href="{{ url('/absen') }}" id="absenLink" class="block mt-4 w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg text-center rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98]">
+        <a href="{{ url('/absen') }}" id="absenLink" class="block mt-4 w-full h-[54px] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#111827] font-bold text-base text-center rounded-2xl shadow-[0_10px_25px_rgba(251,191,36,0.35)] hover:shadow-[0_14px_30px_rgba(251,191,36,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center">
             Absen Sekarang
         </a>
     </div>

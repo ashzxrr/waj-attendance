@@ -9,17 +9,25 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="{{ asset('vendor/face-api/face-api.min.js') }}"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(251,191,36,0.20), transparent 38%),
+                radial-gradient(circle at bottom left, rgba(253,230,138,0.20), transparent 32%),
+                radial-gradient(circle at 50% 0%, rgba(254,243,199,0.35), transparent 45%),
+                #FFFDF7;
             min-height: 100vh;
+            color: #111827;
         }
         #video {
             width: 100%;
             max-width: 360px;
             height: auto;
-            border-radius: 1rem;
+            border-radius: 1.25rem;
             transform: scaleX(-1);
-            background: #1e293b;
+            background: #fff7d6;
         }
         #overlay {
             position: absolute;
@@ -65,21 +73,19 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center p-4 min-h-screen">
+<body class="flex items-center justify-center px-4 py-5 min-h-screen">
     <div class="w-full max-w-sm">
-        <!-- Header -->
         <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 shadow-lg shadow-emerald-500/30 mb-3">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 shadow-[0_10px_25px_rgba(251,191,36,0.25)] mb-3">
+                <svg class="w-8 h-8 text-[#111827]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
-            <h1 class="text-xl font-bold text-white">Registrasi Wajah</h1>
-            <p class="text-slate-400 text-sm mt-1">Daftarkan wajah Anda untuk absensi</p>
+            <h1 class="text-2xl font-bold text-[#111827]">Registrasi Wajah</h1>
+            <p class="text-gray-500 text-sm mt-1">Daftarkan wajah Anda untuk absensi</p>
         </div>
 
-        <!-- Main Card -->
-        <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-5 shadow-xl border border-slate-700/50">
+        <div class="soft-card rounded-[28px] p-5 sm:p-6">
 
             <!-- Loading State -->
             <div id="loadingState" class="text-center py-8">
@@ -91,7 +97,7 @@
             <!-- Camera & Capture UI (hidden until models load) -->
             <div id="cameraUi" class="hidden space-y-4">
                 <!-- Instruction -->
-                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-sm text-amber-300 text-center">
+                <div class="bg-[#FFF7D6] border border-amber-200 rounded-2xl p-3 text-sm text-amber-700 text-center">
                     Posisikan wajah Anda di dalam bingkai, lalu tekan tombol untuk mengambil 3 foto dari sedikit posisi berbeda (depan, kiri sedikit, kanan sedikit)
                 </div>
 
@@ -104,15 +110,15 @@
                             <ellipse cx="180" cy="135" rx="90" ry="105" stroke="rgba(59,130,246,0.4)" stroke-width="2" stroke-dasharray="6 4"/>
                         </svg>
                         <!-- Processing overlay: shown while detection is running -->
-                        <div id="processingOverlay" class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-2xl bg-slate-950/60 backdrop-blur-sm z-10">
-                            <div class="w-10 h-10 border-4 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin mb-2"></div>
-                            <p id="processingText" class="text-emerald-300 text-sm font-medium">Mendeteksi wajah...</p>
+                        <div id="processingOverlay" class="hidden absolute inset-0 flex flex-col items-center justify-center rounded-[20px] bg-white/70 backdrop-blur-sm z-10">
+                            <div class="w-10 h-10 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-2"></div>
+                            <p id="processingText" class="text-amber-700 text-sm font-medium">Mendeteksi wajah...</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Error Message -->
-                <div id="errorMessage" class="hidden bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl p-3 text-center">
+                <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl p-3 text-center">
                 </div>
 
                 <!-- Capture Progress -->
@@ -132,7 +138,7 @@
                 <!-- Capture Button -->
                 <button
                     id="captureBtn"
-                    class="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full h-[54px] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#111827] font-bold text-base rounded-2xl shadow-[0_10px_25px_rgba(251,191,36,0.35)] hover:shadow-[0_14px_30px_rgba(251,191,36,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     Ambil Foto
                 </button>
@@ -140,7 +146,7 @@
                 <!-- Submit Button (hidden until 3 captures) -->
                 <button
                     id="submitBtn"
-                    class="hidden w-full py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-500/40 transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="hidden w-full h-[54px] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#111827] font-bold text-base rounded-2xl shadow-[0_10px_25px_rgba(251,191,36,0.35)] hover:shadow-[0_14px_30px_rgba(251,191,36,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                     Simpan Registrasi Wajah
                 </button>
@@ -153,14 +159,14 @@
                 </svg>
                 <p class="text-red-400 text-sm mb-3">Kamera tidak dapat diakses.</p>
                 <p class="text-slate-400 text-xs mb-4">Pastikan Anda mengizinkan akses kamera.</p>
-                <button onclick="location.reload()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-xl transition-colors">
+                <button onclick="location.reload()" class="px-5 py-2 bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 text-sm rounded-2xl transition-colors">
                     Coba Lagi
                 </button>
             </div>
         </div>
 
         <!-- Footer -->
-        <p class="text-center text-slate-500 text-xs mt-6">
+        <p class="text-center text-gray-400 text-xs mt-6">
             &copy; {{ date('Y') }} WAJ Attendance System
         </p>
     </div>
@@ -295,13 +301,28 @@
         // missed detections and false matches. It is heavier to load, so the
         // loading indicator above stays visible while the weights download.
         async function loadModels() {
-            const MODEL_URL = '{{ asset('vendor/face-api/models') }}';
+            if (window.faceApiModelsLoaded) {
+                return;
+            }
 
-            await Promise.all([
-                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-            ]);
+            if (!window.faceApiModelsLoadPromise) {
+                const MODEL_URL = '{{ asset('vendor/face-api/models') }}';
+
+                window.faceApiModelsLoadPromise = Promise.all([
+                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+                ])
+                    .then(() => {
+                        window.faceApiModelsLoaded = true;
+                    })
+                    .catch((err) => {
+                        window.faceApiModelsLoadPromise = null;
+                        throw err;
+                    });
+            }
+
+            return window.faceApiModelsLoadPromise;
         }
 
         // ─── 2. Start camera ────────────────────────────────────────────────
@@ -318,6 +339,23 @@
                 cameraError.classList.remove('hidden');
                 throw err;
             }
+        }
+
+        function capturePhoto(videoElement, maxWidth = 640, quality = 0.8) {
+            const naturalWidth = videoElement.videoWidth;
+            const naturalHeight = videoElement.videoHeight;
+            const scale = Math.min(1, maxWidth / naturalWidth);
+            const width = Math.round(naturalWidth * scale);
+            const height = Math.round(naturalHeight * scale);
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.translate(width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(videoElement, 0, 0, width, height);
+            return canvas.toDataURL('image/jpeg', quality);
         }
 
         // ─── 3. Capture face ────────────────────────────────────────────────
@@ -362,16 +400,8 @@
                 // Convert Float32Array descriptor to plain array for JSON
                 const descriptor = Array.from(result.descriptor);
 
-                // Capture frame as base64 JPEG via canvas
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                // Flip horizontally to match the mirrored video display
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-                ctx.drawImage(video, 0, 0);
-                const base64Photo = canvas.toDataURL('image/jpeg', 0.85);
+                // Capture frame as base64 JPEG via canvas at a reduced upload size.
+                const base64Photo = capturePhoto(video, 640, 0.8);
 
                 // Store capture
                 captures.push({ descriptor, photo: base64Photo });
