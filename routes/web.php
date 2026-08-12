@@ -17,6 +17,11 @@ Route::get('/', fn() => redirect('/login'));
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
+// React App Routes (SPA with /app prefix)
+Route::get('/app/{path?}', function () {
+    return view('app');
+})->where('path', '.*');
+
 Route::get('/face-registration', [FaceRegistrationController::class, 'show']);
 
 Route::get('/absen', function () {
