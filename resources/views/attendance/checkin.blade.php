@@ -149,6 +149,10 @@
                 <div id="resultIcon" class="text-center"></div>
                 <p id="resultMessage" class="text-center text-lg font-semibold"></p>
                 <p id="resultDetail" class="text-center text-sm text-gray-500"></p>
+                <div id="wifiReminder" class="hidden text-center">
+                    <p class="text-gray-500 text-xs mb-2">Jangan lupa matikan WiFi setelah melakukan absensi.</p>
+                    <div id="wifiPanelContainer"></div>
+                </div>
                 <div class="flex gap-3 pt-2">
                     <a id="backToDashboardLink" href="{{ url('/dashboard') }}" class="flex-1 h-[48px] bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 text-center font-semibold rounded-2xl transition-colors flex items-center justify-center">
                         Kembali ke Dashboard
@@ -561,6 +565,24 @@
                 Jarak: ${data.distance_from_office ? data.distance_from_office.toFixed(0) + ' m' : '-'} |
                 Face: ${data.face_match_score ? data.face_match_score.toFixed(3) : '-'}
             `;
+
+            const wifiReminder = document.getElementById('wifiReminder');
+            const wifiPanelContainer = document.getElementById('wifiPanelContainer');
+            wifiReminder.classList.toggle('hidden', !isSuccess);
+            wifiPanelContainer.replaceChildren();
+
+            if (isSuccess && window.Capacitor) {
+                const wifiButton = document.createElement('button');
+                wifiButton.type = 'button';
+                wifiButton.textContent = 'Matikan WiFi';
+                wifiButton.className = 'w-full h-[48px] bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-2xl transition-colors';
+                wifiButton.addEventListener('click', function () {
+                    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.WifiPanelPlugin) {
+                        window.Capacitor.Plugins.WifiPanelPlugin.openWifiPanel();
+                    }
+                });
+                wifiPanelContainer.appendChild(wifiButton);
+            }
         }
 
         // ─── Cleanup ───────────────────────────────────────────────────────
