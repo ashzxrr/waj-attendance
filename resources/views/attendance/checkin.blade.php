@@ -583,6 +583,13 @@
                 });
                 wifiPanelContainer.appendChild(wifiButton);
             }
+
+            // Show WiFi reminder alert after successful attendance
+            if (isSuccess) {
+                setTimeout(() => {
+                    alert('⚠️ JANGAN LUPA MATIKAN WIFI SETELAH ABSEN! ⚠️\n\nMatikan WiFi Anda setelah melakukan absensi untuk keamanan dan kenyamanan kerja.');
+                }, 500);
+            }
         }
 
         // ─── Cleanup ───────────────────────────────────────────────────────
