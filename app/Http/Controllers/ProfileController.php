@@ -24,6 +24,7 @@ class ProfileController extends Controller
             'pin' => $employee->pin,
             'nama' => $employee->nama,
             'nik' => $employee->nik,
+            'kode_absensi_is_default' => (bool) $auth->kode_absensi_is_default,
             'last_login_at' => $auth->last_login_at,
             'device_id' => $auth->device_id,
             'face_registered' => EmployeeFaceProfile::where('pin', $auth->pin)->exists(),
@@ -48,6 +49,7 @@ class ProfileController extends Controller
 
         $auth->update([
             'pin_absensi' => $validated['new_pin_absensi'],
+            'kode_absensi_is_default' => false,
         ]);
 
         return response()->json([

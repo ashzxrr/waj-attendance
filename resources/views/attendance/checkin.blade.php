@@ -67,7 +67,12 @@
                 </svg>
             </div>
             <h1 class="text-2xl font-bold text-[#111827]">Absensi</h1>
-            <p class="text-gray-500 text-sm mt-1" id="typeLabel">Memuat...</p>
+            <p class="text-gray-500 text-sm mt-1" id="typeLabel">Pilih jenis absensi</p>
+        </div>
+
+        <div id="defaultCodeWarning" class="hidden mb-4 rounded-2xl border-2 border-amber-500 bg-amber-100 p-4 text-amber-900 shadow-sm" role="alert">
+            <p class="font-bold text-sm">Anda masih menggunakan kode absensi default. Segera ganti kode absensi Anda demi keamanan akun.</p>
+            <a href="{{ url('/profile') }}" class="inline-flex mt-3 px-4 py-2 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700">Ganti kode absensi</a>
         </div>
 
         <div class="soft-card rounded-[28px] p-5 sm:p-6">
@@ -81,6 +86,15 @@
 
             <!-- Camera & Capture UI -->
             <div id="cameraUi" class="hidden space-y-4">
+                <div class="grid grid-cols-2 gap-3" role="group" aria-label="Jenis absensi">
+                    <button type="button" data-attendance-type="IN" class="attendance-type-btn h-[54px] rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-700 font-bold transition-colors">
+                        Absen Masuk
+                    </button>
+                    <button type="button" data-attendance-type="OUT" class="attendance-type-btn h-[54px] rounded-2xl border-2 border-amber-200 bg-amber-50 text-amber-700 font-bold transition-colors">
+                        Absen Pulang
+                    </button>
+                </div>
+
                 <!-- Info: type + location -->
                 <div id="infoBar" class="bg-[#FFF7D6] border border-amber-200 rounded-2xl p-3 text-sm text-amber-700 text-center hidden">
                 </div>
@@ -113,9 +127,10 @@
                 <!-- Capture Button -->
                 <button
                     id="captureBtn"
+                    disabled
                     class="w-full h-[54px] bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#111827] font-bold text-base rounded-2xl shadow-[0_10px_25px_rgba(251,191,36,0.35)] hover:shadow-[0_14px_30px_rgba(251,191,36,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                    Ambil Absen
+                    Pilih jenis absensi
                 </button>
             </div>
 
@@ -180,6 +195,14 @@
             window.location.href = `${APP_BASE_URL}/login`;
         }
 
+        fetch(`${APP_BASE_URL}/api/me`, {
+            headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
+        }).then(response => response.ok ? response.json() : null).then(data => {
+            if (data?.kode_absensi_is_default) {
+                document.getElementById('defaultCodeWarning').classList.remove('hidden');
+            }
+        }).catch(() => {});
+
         // ─── State ──────────────────────────────────────────────────────────
         let videoStream = null;
         let isProcessing = false;
@@ -189,6 +212,7 @@
         let referenceDescriptors = null;
         let officeLocation = null;
         let nextType = null;
+        let selectedType = null;
         let currentPosition = null;
 
         // ─── DOM refs ───────────────────────────────────────────────────────
@@ -289,7 +313,7 @@
 
             const descriptorData = await descriptorRes.json();
             const officeData = await officeRes.json();
-            const typeData = await typeRes.json();
+            const typeData = typeRes.ok ? await typeRes.json() : null;
 
             referenceDescriptors = descriptorData.descriptor;
 
@@ -306,11 +330,13 @@
             }
 
             officeLocation = officeData.office;
-            nextType = typeData.next_type;
+            nextType = typeData?.next_type || null;
+            typeLabel.textContent = 'Pilih jenis absensi';
 
-            const label = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
-            typeLabel.textContent = label;
-            captureBtn.textContent = label;
+            if (nextType) {
+                infoBar.innerHTML = `Sepertinya Anda akan melakukan <strong>${nextType === 'IN' ? 'absen masuk' : 'absen pulang'}</strong>. Silakan pilih sesuai aktivitas Anda.`;
+                infoBar.classList.remove('hidden');
+            }
         }
 
         // ─── 2. Load face-api.js models ────────────────────────────────────
@@ -418,6 +444,10 @@
 
         async function captureAttendance() {
             if (isProcessing) return;
+            if (!selectedType) {
+                showError('Pilih Absen Masuk atau Absen Pulang terlebih dahulu.');
+                return;
+            }
             isProcessing = true;
             captureBtn.disabled = true;
             captureBtn.textContent = 'Memverifikasi...';
@@ -456,7 +486,7 @@
                         showError('Wajah tidak terdeteksi, coba lagi');
                         isProcessing = false;
                         captureBtn.disabled = false;
-                        captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
+                        captureBtn.textContent = selectedType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
                         return;
                     }
 
@@ -482,7 +512,7 @@
                     // Keep camera running, just reset button for retry
                     isProcessing = false;
                     captureBtn.disabled = false;
-                    captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
+                    captureBtn.textContent = selectedType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
                     return;
                 }
 
@@ -507,6 +537,7 @@
                         'Authorization': 'Bearer ' + token,
                     },
                     body: JSON.stringify({
+                        type: selectedType,
                         latitude: currentPosition.latitude,
                         longitude: currentPosition.longitude,
                         face_match_score: finalScore,
@@ -524,7 +555,7 @@
                         // Keep camera running, just reset button for retry
                         isProcessing = false;
                         captureBtn.disabled = false;
-                        captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
+                        captureBtn.textContent = selectedType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
                         return;
                     }
                     throw new Error(data.message || 'Absen gagal');
@@ -540,7 +571,7 @@
                 hideProcessing();
                 isProcessing = false;
                 captureBtn.disabled = false;
-                captureBtn.textContent = nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
+                captureBtn.textContent = selectedType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
             }
         }
 
@@ -621,10 +652,10 @@
                 // Step 4: start camera
                 await startCamera();
 
-                // Show info bar
                 infoBar.innerHTML = `
-                    <span class="text-emerald-400 font-medium">${nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang'}</span>
+                    <span id="selectedTypeLabel" class="text-emerald-400 font-medium">Pilih jenis absensi</span>
                     &middot; Lokasi: ${currentPosition.latitude.toFixed(4)}, ${currentPosition.longitude.toFixed(4)}
+                    ${nextType ? `<br><span class="text-gray-500 text-xs">Saran sistem: ${nextType === 'IN' ? 'Absen Masuk' : 'Absen Pulang'} (silakan pilih sesuai kondisi sebenarnya)</span>` : ''}
                 `;
                 infoBar.classList.remove('hidden');
 
@@ -648,6 +679,21 @@
 
         // ─── Event listeners ───────────────────────────────────────────────
         captureBtn.addEventListener('click', captureAttendance);
+        document.querySelectorAll('.attendance-type-btn').forEach((button) => {
+            button.addEventListener('click', function () {
+                selectedType = this.dataset.attendanceType;
+                const label = selectedType === 'IN' ? 'Absen Masuk' : 'Absen Pulang';
+                typeLabel.textContent = label;
+                captureBtn.textContent = label;
+                captureBtn.disabled = false;
+                document.querySelectorAll('.attendance-type-btn').forEach((typeButton) => {
+                    typeButton.classList.remove('ring-4', 'ring-amber-200', 'border-amber-500');
+                });
+                this.classList.add('ring-4', 'ring-amber-200', 'border-amber-500');
+                const selectedTypeLabel = document.getElementById('selectedTypeLabel');
+                if (selectedTypeLabel) selectedTypeLabel.textContent = label;
+            });
+        });
     </script>
 </body>
 </html>

@@ -107,6 +107,7 @@ class AuthController extends Controller
                 ],
                 'device_id' => $auth->device_id,
                 'last_login_at' => $auth->last_login_at,
+                'kode_absensi_is_default' => (bool) $auth->kode_absensi_is_default,
                 'face_registered' => EmployeeFaceProfile::where('pin', $auth->pin)->exists(),
             ]);
         } catch (\Exception $e) {

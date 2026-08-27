@@ -67,6 +67,9 @@
                     Logout
                 </button>
             </form>
+            <a href="{{ url('/admin/karyawan') }}" class="px-4 py-2 bg-white border border-amber-200 hover:bg-[#FFF7D6] text-gray-700 text-sm rounded-2xl shadow-sm transition-colors">
+                Daftar Karyawan
+            </a>
         </div>
 
         <!-- Flash Messages -->

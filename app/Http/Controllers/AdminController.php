@@ -112,6 +112,17 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('logs', 'stats'));
     }
 
+    public function employees()
+    {
+        $employees = DB::table('employees_cache')
+            ->leftJoin('employee_auth', 'employees_cache.pin', '=', 'employee_auth.pin')
+            ->select('employees_cache.pin', 'employees_cache.nama', 'employees_cache.nik', 'employees_cache.is_active', 'employee_auth.kode_absensi_is_default')
+            ->orderBy('employees_cache.nama')
+            ->paginate(50);
+
+        return view('admin.employees', compact('employees'));
+    }
+
     /**
      * Approve a flagged attendance record.
      */

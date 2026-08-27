@@ -118,6 +118,7 @@ class AttendanceApiController extends Controller
     {
         try {
             $request->validate([
+                'type' => ['required', 'string', 'in:IN,OUT'],
                 'latitude' => ['required', 'numeric', 'between:-90,90'],
                 'longitude' => ['required', 'numeric', 'between:-180,180'],
                 'face_match_score' => ['required', 'numeric', 'min:0', 'max:2'],
@@ -128,13 +129,7 @@ class AttendanceApiController extends Controller
             $pin = $request->user()->pin;
             $today = now()->toDateString();
 
-            // ─── Determine type (IN / OUT) ────────────────────────────────
-            $lastLog = AttendanceLog::where('pin', $pin)
-                ->where('tanggal', $today)
-                ->orderBy('datetime', 'desc')
-                ->first();
-
-            $type = $lastLog && $lastLog->type === 'IN' ? 'OUT' : 'IN';
+            $type = $request->string('type')->toString();
 
             // ─── Face verification (HARD REJECT if mismatch) ───────────────
             // face-api.js euclidean distance: lower = better match.
@@ -228,10 +223,6 @@ class AttendanceApiController extends Controller
             // ─── Response ──────────────────────────────────────────────────
             $typeLabel = $type === 'IN' ? 'Masuk' : 'Pulang';
             $message = "Absen {$typeLabel} berhasil";
-
-            if ($status === 'flagged') {
-                $message = 'Di luar area pabrik, absen ditandai untuk review';
-            }
 
             return response()->json([
                 'status' => $status,

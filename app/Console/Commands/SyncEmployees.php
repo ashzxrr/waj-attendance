@@ -139,12 +139,12 @@ class SyncEmployees extends Command
                 // Only create auth record if one doesn't already exist for this PIN
                 // ---------------------------------------------------------------
                 if (! EmployeeAuth::where('pin', $emp['pin'])->exists()) {
-                    // Generate a random 6-digit numeric security PIN
-                    $plainPin = (string) random_int(100000, 999999);
+                    $plainPin = str_pad((string) $emp['pin'], 6, '0', STR_PAD_LEFT);
 
                     EmployeeAuth::create([
                         'pin' => $emp['pin'],
                         'pin_absensi' => $plainPin, // model mutator auto-hashes this
+                        'kode_absensi_is_default' => true,
                     ]);
 
                     // Store plain PIN in memory for CSV export (never persisted to DB)

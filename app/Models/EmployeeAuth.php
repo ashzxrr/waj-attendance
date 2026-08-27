@@ -14,6 +14,7 @@ class EmployeeAuth extends Model
     protected $fillable = [
         'pin',
         'pin_absensi',
+        'kode_absensi_is_default',
         'device_id',
         'last_login_at',
     ];
@@ -25,6 +26,7 @@ class EmployeeAuth extends Model
     protected function casts(): array
     {
         return [
+            'kode_absensi_is_default' => 'boolean',
             'last_login_at' => 'datetime',
         ];
     }

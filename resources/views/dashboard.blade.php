@@ -33,6 +33,16 @@
             </button>
         </div>
 
+        <div id="defaultCodeWarning" class="hidden mb-4 rounded-2xl border-2 border-amber-500 bg-amber-100 p-4 text-amber-900 shadow-sm" role="alert">
+            <div class="flex items-start gap-3">
+                <span class="text-xl font-bold" aria-hidden="true">!</span>
+                <div class="flex-1">
+                    <p class="font-bold">Anda masih menggunakan kode absensi default. Segera ganti kode absensi Anda demi keamanan akun.</p>
+                    <a href="{{ url('/profile') }}" class="inline-flex mt-3 px-4 py-2 rounded-xl bg-amber-600 text-white font-semibold hover:bg-amber-700">Ganti kode absensi</a>
+                </div>
+            </div>
+        </div>
+
         <div class="soft-card rounded-[28px] p-6 sm:p-7 text-center">
             <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-[0_10px_25px_rgba(251,191,36,0.25)] mb-4">
                 <svg class="w-10 h-10 text-[#111827]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,6 +87,9 @@
                     if (!data.face_registered) {
                         window.location.href = `${APP_BASE_URL}/face-registration`;
                         return;
+                    }
+                    if (data.kode_absensi_is_default) {
+                        document.getElementById('defaultCodeWarning').classList.remove('hidden');
                     }
                 }
             } catch (e) {
