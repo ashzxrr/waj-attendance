@@ -251,11 +251,11 @@
                                         @php
                                             $photoUrl = asset('storage/' . ltrim($log->photo_path, '/'));
                                         @endphp
-                                        <a href="{{ $photoUrl }}" target="_blank">
+                                        <button type="button" onclick="openPhotoModal('{{ $photoUrl }}', '{{ e($log->nama) }}')">
                                             <img src="{{ $photoUrl }}"
                                                  alt="Foto absen"
                                                  class="photo-thumb w-10 h-10 rounded-xl object-cover border border-amber-200">
-                                        </a>
+                                        </button>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
@@ -344,6 +344,15 @@
         </div>
     </div>
 
+    <!-- Photo Review Modal -->
+    <div id="photoModal" class="fixed inset-0 bg-[#111827]/75 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="relative rounded-[24px] border border-amber-100 bg-white p-4 max-w-3xl w-full shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+            <button type="button" onclick="closePhotoModal()" aria-label="Tutup foto" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white border border-amber-200 text-gray-700 text-xl leading-none shadow-sm">&times;</button>
+            <p id="photoModalTitle" class="text-sm font-semibold text-gray-700 mb-3 pr-10">Review foto absensi</p>
+            <img id="photoModalImage" src="" alt="Foto absensi ukuran penuh" class="block max-h-[75vh] w-auto max-w-full mx-auto rounded-2xl object-contain">
+        </div>
+    </div>
+
     <script>
         function openRejectModal(id) {
             document.getElementById('rejectForm').action = '{{ url('/admin/attendance') }}/' + id + '/reject';
@@ -357,10 +366,24 @@
             document.getElementById('reason').value = '';
         }
 
+        function openPhotoModal(url, employeeName) {
+            document.getElementById('photoModalImage').src = url;
+            document.getElementById('photoModalTitle').textContent = 'Review foto absensi - ' + employeeName;
+            document.getElementById('photoModal').classList.remove('hidden');
+            document.getElementById('photoModal').classList.add('flex');
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.add('hidden');
+            document.getElementById('photoModal').classList.remove('flex');
+            document.getElementById('photoModalImage').src = '';
+        }
+
         // Close modal on escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeRejectModal();
+                closePhotoModal();
             }
         });
 
@@ -368,6 +391,12 @@
         document.getElementById('rejectModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeRejectModal();
+            }
+        });
+
+        document.getElementById('photoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoModal();
             }
         });
     </script>

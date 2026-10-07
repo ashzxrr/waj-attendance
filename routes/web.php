@@ -50,6 +50,7 @@ Route::post('/admin/login', [AdminController::class, 'login']);
 Route::middleware('admin.auth')->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/admin/karyawan', [AdminController::class, 'employees']);
+    Route::post('/admin/karyawan/{pin}/reset-code', [AdminController::class, 'resetEmployeeCode']);
     Route::post('/admin/logout', [AdminController::class, 'logout']);
     Route::post('/admin/attendance/{id}/approve', [AdminController::class, 'approveAttendance']);
     Route::post('/admin/attendance/{id}/reject', [AdminController::class, 'rejectAttendance']);

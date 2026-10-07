@@ -19,6 +19,15 @@
             </form>
         </div>
 
+        @if (session('success'))
+            <div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-700 text-sm">{{ session('success') }}</div>
+        @endif
+
+        <form method="GET" action="{{ url('/admin/karyawan') }}" class="mb-4">
+            <label for="search" class="sr-only">Cari karyawan</label>
+            <input type="search" id="search" name="search" value="{{ request('search') }}" placeholder="Ketik untuk mencari nama, PIN, atau NIK..." autocomplete="off" class="w-full h-[46px] px-4 bg-white border border-amber-200 rounded-2xl text-sm text-[#111827] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-300">
+        </form>
+
         <div class="bg-white/80 border border-amber-100 rounded-[24px] overflow-hidden shadow-sm">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
@@ -28,6 +37,7 @@
                             <th class="px-4 py-3 font-medium">PIN</th>
                             <th class="px-4 py-3 font-medium">NIK</th>
                             <th class="px-4 py-3 font-medium">Status Kode Absensi</th>
+                            <th class="px-4 py-3 font-medium">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-amber-100">
@@ -45,9 +55,15 @@
                                         <span class="text-gray-400">Belum ada akun</span>
                                     @endif
                                 </td>
+                                <td class="px-4 py-3">
+                                    <form method="POST" action="{{ url('/admin/karyawan/' . rawurlencode($employee->pin) . '/reset-code') }}" onsubmit="return confirm('Reset kode absensi ' + @js($employee->nama) + ' ke default PIN?');">
+                                        @csrf
+                                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold hover:bg-rose-100">Reset Kode</button>
+                                    </form>
+                                </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="px-4 py-8 text-center text-gray-500">Belum ada data karyawan.</td></tr>
+                            <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Belum ada data karyawan.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -55,5 +71,14 @@
             <div class="p-4">{{ $employees->links() }}</div>
         </div>
     </div>
+    <script>
+        const employeeSearch = document.getElementById('search');
+        let searchTimer;
+
+        employeeSearch.addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => this.form.submit(), 350);
+        });
+    </script>
 </body>
 </html>

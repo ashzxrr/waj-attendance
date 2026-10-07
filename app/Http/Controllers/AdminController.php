@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AttendanceLog;
+use App\Models\EmployeeAuth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -112,15 +113,42 @@ class AdminController extends Controller
         return view('admin.dashboard', compact('logs', 'stats'));
     }
 
-    public function employees()
+    public function employees(Request $request)
     {
-        $employees = DB::table('employees_cache')
+        $query = DB::table('employees_cache')
             ->leftJoin('employee_auth', 'employees_cache.pin', '=', 'employee_auth.pin')
-            ->select('employees_cache.pin', 'employees_cache.nama', 'employees_cache.nik', 'employees_cache.is_active', 'employee_auth.kode_absensi_is_default')
-            ->orderBy('employees_cache.nama')
-            ->paginate(50);
+            ->select('employees_cache.pin', 'employees_cache.nama', 'employees_cache.nik', 'employees_cache.is_active', 'employee_auth.kode_absensi_is_default');
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->trim()->toString();
+            $query->where(function ($employeeQuery) use ($search) {
+                $employeeQuery->where('employees_cache.nama', 'like', "%{$search}%")
+                    ->orWhere('employees_cache.pin', 'like', "%{$search}%")
+                    ->orWhere('employees_cache.nik', 'like', "%{$search}%");
+            });
+        }
+
+        $employees = $query->orderBy('employees_cache.nama')
+            ->paginate(50)
+            ->withQueryString();
 
         return view('admin.employees', compact('employees'));
+    }
+
+    public function resetEmployeeCode(string $pin)
+    {
+        $employee = DB::table('employees_cache')->where('pin', $pin)->first();
+
+        if (! $employee) {
+            abort(404);
+        }
+
+        $auth = EmployeeAuth::firstOrNew(['pin' => $pin]);
+        $auth->pin_absensi = str_pad($pin, 6, '0', STR_PAD_LEFT);
+        $auth->kode_absensi_is_default = true;
+        $auth->save();
+
+        return back()->with('success', "Kode absensi {$employee->nama} berhasil di-reset ke default.");
     }
 
     /**
