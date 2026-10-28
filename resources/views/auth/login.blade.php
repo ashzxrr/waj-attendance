@@ -145,7 +145,7 @@
                             pattern="[0-9]*"
                             placeholder="Masukkan PIN"
                             required
-                            autocomplete="off"
+                            autocomplete="username"
                             class="w-full h-[54px] pl-12 pr-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 text-base font-medium focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100 transition-all duration-200"
                         >
                     </div>
@@ -184,6 +184,15 @@
                         </button>
                     </div>
                 </div>
+
+                <label for="rememberPin" class="flex items-center gap-2 text-sm font-medium text-gray-600">
+                    <input
+                        type="checkbox"
+                        id="rememberPin"
+                        class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
+                    >
+                    <span>Ingat PIN saya di perangkat ini</span>
+                </label>
 
                 <!-- Submit Button -->
                 <button
@@ -258,11 +267,25 @@
         const errorDiv = document.getElementById('errorMessage');
         const pinField = document.getElementById('pin');
         const pinAbsensiField = document.getElementById('pin_absensi');
+        const rememberPinCheckbox = document.getElementById('rememberPin');
+        const rememberedPinKey = 'remembered_employee_pin';
         const loginCard = document.getElementById('loginCard');
         const biometricCard = document.getElementById('biometricCard');
         const biometricStatus = document.getElementById('biometricStatus');
         const biometricBtn = document.getElementById('biometricBtn');
         const usePinBtn = document.getElementById('usePinBtn');
+
+        const rememberedPin = localStorage.getItem(rememberedPinKey);
+        if (rememberedPin) {
+            pinField.value = rememberedPin;
+            rememberPinCheckbox.checked = true;
+        }
+
+        rememberPinCheckbox.addEventListener('change', function() {
+            if (!this.checked) {
+                localStorage.removeItem(rememberedPinKey);
+            }
+        });
 
         function generateDeviceId() {
             let stored = localStorage.getItem('device_id');
@@ -401,6 +424,12 @@
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('employee_name', data.employee.nama);
                 localStorage.setItem('employee_pin', data.employee.pin);
+
+                if (rememberPinCheckbox.checked) {
+                    localStorage.setItem(rememberedPinKey, data.employee.pin);
+                } else {
+                    localStorage.removeItem(rememberedPinKey);
+                }
 
                 if (!biometricEnrolled && await isBiometricAvailable()) {
                     await promptBiometricEnrollment(pin, kodeAbsensi);
